@@ -1,0 +1,266 @@
+Which programming language(s) are you using? Why?
+
+Primary Language: Python 3 (3.10+ / 3.12)
+
+- Object-Oriented and Functional Programming: Python supports both programming approaches. Object-oriented features include encapsulation, inheritance, and abstract base classes, while functional features include first-class functions, closures, higher-order functions such as map() and filter(), and operator overloading. These features allow the system to combine both programming styles using a bottom-up design.
+
+- Configuration and Ease of Use: Python allows game configurations to be defined using JSON files and provides a Fluent Builder API through ExTetrisBuilder. It also supports integration with Jupyter Notebooks (ExTetris_Studio.ipynb), allowing users to create and customize game variants without writing extensive code.
+
+- Cross-Platform I/O: Python supports non-blocking terminal input/output using termios and select on WSL/Linux and msvcrt on Windows. The tkinter library is used for graphical display.
+
+Supporting / Automation Languages:
+
+- GNU Make and Bash (Makefile, setup.sh, run.sh, test.sh): Used for automating the build process, testing, and packaging.
+
+- JSON (configs/*.json): Used to define game specifications and configurations without requiring changes to the source code.
+2. 	
+
+Which of the programming languages you are using are full-fledged, and which are scripting languages? What are the infrastructure systems required for the scripting ones in your design?
+
+Language Roles:
+
+- Python: Used as the main programming language for developing the core engine, data structures, and algorithms. It is also used for creating and customizing different game variants through scripting.
+
+- Bash / POSIX Shell: Used for environment setup, automating tests, and running scripts.
+
+- GNU Make: Used to automate the build process.
+
+- JSON: Used to define game configurations and specifications in a structured format.
+
+Infrastructure Systems Required:
+
+- Python Runtime: CPython 3.10+ interpreter required to execute the application.
+
+- Terminal / OS Subsystem: POSIX TTY and termios interface on Linux/WSL, along with standard input/output streams for displaying ANSI escape sequences and capturing keyboard input without blocking execution.
+
+- Numerical Acceleration: NumPy library for efficient 2D matrix operations and data representation.
+
+- Display Server (Optional for GUI): X11 or Wayland display server (e.g., WSLg or VcXsrv), along with Tk/Tcl libraries for the Tkinter-based graphical interface.
+
+- Interactive Notebook Kernel: Jupyter/IPython kernel required to run the ExTetris_Studio.ipynb notebook.
+3. 	Describe the class hierarchy (or any other chart-like structural description) of your ExTetris game / system / platform.
+
+1. Geometric Shape Hierarchy:
+
+- Shape (Base Class): The parent class that represents game pieces using normalized coordinate sets (r, c) instead of fixed matrices. It handles geometric operations such as clockwise and anticlockwise rotation, flipping, matrix generation, and calculations related to landing holes and cavities.
+
+- ExTetromino (Shape): Ensures that every piece consists of exactly four connected squares, where connectivity can be through edges or corners (8-neighbourhood).
+
+- Subclassification Facets:
+
+- By Bounding Box: Includes Box1x4Shape, Box2x2Shape, Box2x3Shape, Box3x2Shape, Box2x4Shape, Box4x2Shape, Box3x3Shape, and Box4x4Shape. These classes use parameterized constructors instead of predefined matrices.
+
+- By Morphology: OrthogonalTetromino represents traditional edge-connected shapes, while DiagonalPolyplet represents shapes connected through corners.
+
+- By Landing Cavities: FlatLandingShape represents pieces with no holes, SingleCavityShape represents pieces with one hole, and MultiCavityShape represents pieces with two or more holes.
+
+2. Supporting Subsystems:
+
+- Board: Manages the 2D game grid, detects collisions, prevents negative wrap-around errors, clears completed lines, and calculates hole and bumpiness metrics.
+
+- ExTetrominoFactory: Generates all 110 unique 4-polyplets algorithmically and creates their corresponding class instances.
+
+- ExTetrisEngine: Manages the game state through a state machine with four states: READY, RUNNING, PAUSED, and GAME_OVER. It uses Observer callbacks and operates independently of the user interface.
+
+- ShapeDistribution (Functional-OO): Handles different shape selection methods, including Uniform, Weighted, Bag, AdaptiveDifficulty, and Markov distributions. It also supports higher-order operations such as filter(), map(), and blend().
+
+- AbstractRenderer: Provides a separate rendering interface with three implementations: CLIRenderer (ANSI terminal display for WSL), TkinterRenderer (graphical interface), and HeadlessRenderer (for testing).
+
+- ExTetrisBuilder: Provides a simple Builder API that allows users to configure and launch different game variants without directly modifying the core code.
+4. 	How many ExTetrominoes do you provide? Do you (and how) allow inclusion-exclusion of the different ExTetrominoes in the game?
+
+Number Provided:
+
+1. ExTetrominoFactory: Generates and classifies all 110 unique canonical 4-polyplets algorithmically on a 4×4 grid. This expands the previous implementation, which contained only 73 predefined shapes.
+
+2. It also includes the 7 standard classic tetrominoes as a separate, pre-indexed subset.
+
+Inclusion-Exclusion Mechanisms:
+
+1. Higher-Order Functional Filtering: The dist.filter(predicate) method allows users to filter shapes using custom conditions. For example, users can select shapes with zero landing holes or only diagonal shapes.
+
+2. Builder API Methods: The Builder API provides methods to select and filter shapes, including:
+
+    builder.use_classic_tetris()
+
+    builder.use_extended_tetris()
+
+    builder.filter_max_holesNo
+
+    builder.filter_orthogonal_only()
+
+    builder.filter_diagonal_only()
+
+3. Declarative JSON Configuration: Users can define game settings and filtering conditions directly through JSON files without writing code. Supported options include:
+
+    variant: "classic", "extended", or "chaos"
+
+    max_holes: 0, 1, or 2
+
+    connectivity: "orthogonal" or "diagonal"
+
+5. 	How is the inclusion-exclusion as well as new piece instantiation of ExTetrominoes handled? Are there subclasses of them? If yes, what are the specialization or subclassification criteria? How many of these criteria are programmable (by the player in UI/UX, by the game programmer in API)?
+
+Piece Instantiation & Inclusion/Exclusion:
+
+- Shapes are generated dynamically without relying on predefined matrix tables. ExTetrominoFactory searches possible combinations on a 4×4 grid, checks 8-neighbourhood connectivity, normalizes coordinates to (0, 0), and creates the appropriate subclass based on its bounding box and cavity properties.
+
+Subclass Classification Criteria:
+
+- Bounding Box Dimensions (H × W): Shapes are classified into Box1x4, Box2x2, Box2x3, Box3x2, Box2x4, Box4x2, Box3x3, and Box4x4 categories.
+
+- Topological Adjacency: Shapes are classified as edge-connected (OrthogonalTetromino) or corner-connected (DiagonalPolyplet).
+
+- Landing Cavity Properties: FlatLandingShape represents shapes with no holes, SingleCavityShape represents shapes with one hole, and MultiCavityShape represents shapes with two or more holes.
+
+Programmability:
+
+- By Game Programmer (API): Programmers can fully customize the game using ExTetrisBuilder, custom filtering conditions, and custom shape distribution weights.
+
+- By Player (UI/UX): Players can select game options through CLI arguments (--variant, --renderer), GUI menu options, or by editing simple JSON configuration files (configs/*.json).
+6. 	How do you handle the next-piece choice probability distribution?
+
+Replaced the basic piece-selection approach with a Functional-OO Strategy Framework:
+
+- UniformDistribution: Selects shapes randomly, giving every available shape an equal probability of being chosen.
+
+- WeightedDistribution: Assigns probabilities to shapes based on their weights using the formula P(S_i) = w_i / sum(w_j).
+
+- BagDistribution: Uses the 7-Bag or N-Bag randomization method to shuffle pieces while ensuring that every piece appears within a bag before repetition. This prevents pieces from being unavailable for long periods.
+
+- AdaptiveDifficultyDistribution: Adjusts the selection of shapes according to the current board condition. It calculates board distress using the formula:
+
+  Distress = 0.5 × (H_max / H_board) + 0.35 × (Holes / 8) + 0.15 × (Bumpiness / 15)
+
+  When the player is struggling, the system increases the probability of safer, flat-landing shapes (FlatLandingShape). When the board is relatively clear, it increases the probability of more challenging multi-cavity shapes.
+
+- MarkovDistribution: Uses a transition probability matrix P(S_(t+1) | S_t) to determine the next shape based on the previously selected shape, reducing the chances of immediate consecutive repetitions.
+
+Functional Combinators:
+
+Supports combining and modifying distribution strategies using higher-order functions such as .filter(), .map(), and .blend() (linear combination). It also supports operator overloading, allowing distributions to be combined using operators such as (dist1 + dist2) and (dist >> fn).
+7. 	How do you handle game levels and speed and dynamic configuration changes in the game?
+
+Levels & Gravity Progression:
+
+- The game tracks the total number of cleared rows using lines_cleared. The level increases by 1 after every 10 cleared rows. The formula used is: level = 1 + (lines_cleared // 10).
+
+- The speed at which pieces fall increases as the player progresses. The drop interval decreases according to the formula: drop_speed_ms = max(100, int(initial_speed * 0.92^(lines // 10))). The minimum drop interval is 100 milliseconds.
+
+Dynamic Configuration & State Changes:
+
+- Players can adjust the drop speed during gameplay using keyboard shortcuts or GUI menu options through speed_up() and slow_down().
+
+- AdaptiveDifficultyDistribution updates the probabilities of selecting different shapes on every game tick based on the current board condition. It uses metrics such as count_holes(), get_max_height(), and get_bumpiness().
+
+- Engine Observer callbacks automatically send updates about the score, level, and cleared rows to the renderers.
+8. 	How do you provide initial configuration, configuration programmability, configuration interface, dynamic configuration programming?
+
+Initial Configuration:
+
+- The game is configured through the ExTetrisEngine constructor, which accepts parameters such as board width, board height, initial speed, speed increase factor, and shape distribution strategy.
+
+Configuration Programmability & Interfaces:
+
+- Declarative JSON Interface: The load_game_from_json("configs/custom_game.json") method allows users to define game rules, board dimensions, piece categories, and rendering options through a JSON file without writing code.
+
+- Fluent Builder API: ExTetrisBuilder provides a chain of methods to configure the game. Users can set board dimensions, select extended Tetris, filter shapes based on the number of holes, choose a distribution strategy, and select a renderer before starting the game.
+
+- Interactive Jupyter Studio: The ExTetris_Studio.ipynb notebook provides interactive widgets for exploring different shapes and adjusting shape distributions.
+
+Dynamic Configuration Programming:
+
+- Runtime Speed Control: Players can increase or decrease the game speed during gameplay using speed_up() and slow_down().
+
+- Conditional Distribution Switching: The distribution strategy can be changed dynamically based on specified conditions using dist.conditional(predicate, dist_a, dist_b).
+
+- Observer Event Registration: The engine allows event listeners to be registered using register_callback(), enabling different components to respond to game events.
+9. 	How much of the physics of the game (shape constraints like square block components, environment constraints like horizontal and vertical alignments, speed and collision effects, etc.) flexible in your system or platform? If it is indeed flexible, how easy or hard it is to program it?
+
+Flexibility of Game Physics:
+
+- Shape Constraints: The system supports different shape sizes through the base Shape class, which uses normalized 2D integer coordinates. Although ExTetromino is designed for pieces containing 4 blocks, other shapes such as Pentominoes (5 blocks) and general Polyominoes can also be supported by directly extending the Shape class.
+
+- Environment / Grid Dimensions: Board dimensions are fully configurable. Users can choose different width and height combinations, such as 10×20, 12×22, or 16×30.
+
+- Spatial Alignment & Collisions: The system maintains strict grid boundaries and prevents negative-index wrap-around errors. During rotation, it also supports wall-kick recovery by trying nearby offsets (±1 and ±2) before rejecting the rotation.
+
+- Speed & Drop Effects: The game supports configurable soft drops (+1 point) and instant hard drops with ghost-piece projection (+2 points per cell).
+
+Ease of Programming:
+
+- Very Easy: Changing grid dimensions, drop speed, shape filters, scoring rules, or distribution strategies requires only a single line of modification in the Builder API or JSON configuration file.
+
+- Moderate: Implementing non-standard physics, such as diagonal gravity or non-Euclidean grid wrapping, requires modifying the Board class methods, particularly Board.is_valid_position() and Board.clear_lines().
+10. 	How do you handle ongoing game states, global system states, suspension and resumption, etc.?
+
+State Representation:
+
+- The game state is managed through a Finite State Machine in ExTetrisEngine with four states: READY, RUNNING, PAUSED, and GAME_OVER.
+
+- The main state variables include cursor, current_piece, next_piece, board.grid, score, lines_cleared, level, is_paused, and is_game_over.
+
+Suspension and Resumption:
+
+- Pausing (toggle_pause() / P key): Stops automatic piece movement and ignores player movement and rotation inputs while preserving the board, active piece, cursor position, and timer.
+
+- Resuming the game restarts the game loop from where it was paused without losing any progress.
+
+State Persistence & Telemetry:
+
+- State Saving: The current game state can be exported and saved to a text file using save_file().
+
+- Render Composition: The get_render_composite() method combines locked blocks, the currently falling piece, and its ghost landing position into a single matrix for display.
+
+- Board Cloning: The board.clone() method creates an independent copy of the board, allowing simulations, testing, and future game-planning functionality without modifying the original board.
+11. 	Anything else?
+
+WSL-Native Terminal Interface:
+
+- A dedicated CLIrenderer is provided using ANSI escape sequences and non-blocking keyboard input. It uses termios and select on Linux/WSL and msvcrt on Windows. This allows the game to run directly in the terminal without requiring an X11 server. A separate TkinterRenderer is also available for desktop GUI support.
+
+Combinatorial Synthesis vs. Hardcoding:
+
+- The system generates all 110 unique 4-polyplets on a 4×4 grid in less than 0.05 seconds. Shapes are generated algorithmically rather than relying on predefined Boolean arrays.
+
+Modern Mechanics:
+
+- Includes modern gameplay features such as ghost-piece projection and wall-kick rotation recovery.
+
+Robust Verification:
+
+- Includes 25 unit tests in the tests/ directory, which run in approximately 0.2 seconds with a reported 100% pass rate.
+
+Build & Packaging Automation:
+
+- Includes a complete Makefile with commands to run different game variants:
+
+    make run
+
+    make run-classic
+
+    make run-extended
+
+    make run-chaos
+
+    make run-gui
+
+    make package
+
+- The make package command creates a packaged submission named extetris_submission.zip.
+
+Documentation:
+
+- Includes the following documentation and resources:
+
+    DESIGN.md
+
+    UML.md (Mermaid diagrams)
+
+    API.md
+
+    GAME_PROGRAMMERS_MANUAL.md
+
+    ExTetris_Studio.ipynb
+
+    Section 2.2 AI_USAGE_REPORT.md
