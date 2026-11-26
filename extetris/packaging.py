@@ -14,12 +14,15 @@ INCLUDE_ROOTS = (
     "attempts",
     "ExTetris_Studio.ipynb",
     "AI_INTERACTION_LOG.md",
+    "AI_INTERACTION_LOG.pdf",
+    "GIT_HISTORY.txt",
     "Makefile",
     "setup.sh",
     "run.sh",
     "test.sh",
     "LICENSE",
     "README.md",
+    "README.pdf",
     "pyproject.toml",
 )
 

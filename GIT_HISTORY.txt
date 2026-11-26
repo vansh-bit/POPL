@@ -1,0 +1,30 @@
+77d372e 2026-11-26 13:34:00 +0530  (HEAD -> master) Sync Attempt 5 tag hash 8282631 across attempts/README.md, AI_USAGE_REPORT.md, and AI_INTERACTION_LOG.md
+8282631 2026-11-26 13:33:32 +0530  (tag: attempt-5-final) Attempt 5 final docs: add AI_INTERACTION_LOG portability guide and accurate persistence limits
+03a0523 2026-11-26 13:04:46 +0530  Sync attempts/README.md with Attempt 5 commit fdb216c
+fdb216c 2026-11-26 13:04:29 +0530  Attempt 5 final corrections: full verbatim log, qualified effort, Git/ZIP & offline setup docs
+fa26c1f 2026-11-26 12:49:44 +0530  Update attempts/README.md with post-audit Attempt 5 commit
+cfd1a1f 2026-11-26 12:49:31 +0530  Attempt 5 (INT-027): fix Tk display probe, setup.sh deps, offline packaging skip, and CLI preset sync
+4e9ee54 2026-11-26 12:04:22 +0530  Update attempts/README.md with Attempt 5 commit and tag
+3d59b1c 2026-11-26 12:04:06 +0530  Attempt 5: modular extetris package, build scripts, clean-venv packaging test, and full docs
+49a73f5 2026-11-26 11:43:48 +0530  Update attempts/README.md with Attempt 4 commit and tag
+c18c89a 2026-11-26 11:43:36 +0530  (tag: attempt-4-designer-and-tests) Attempt 4: ExTetrisBuilder, JSON validation, persistence, Studio notebook, and 22/22 tests
+c91dd5a 2026-11-26 11:35:04 +0530  Sync attempts/README.md with Attempt 3 rounding fix
+c091859 2026-11-26 11:34:50 +0530  (tag: attempt-3-engine-and-distributions) Attempt 3: fix IEEE-754 float rounding in speed_up/slow_down
+a3e0dba 2026-11-26 11:33:53 +0530  Update attempts/README.md with Attempt 3 commit and tag
+11e3753 2026-11-26 11:33:33 +0530  Attempt 3: UI-agnostic FSM engine, Functional-OO distributions, renderers, and 15/15 tests
+993dbf3 2026-11-26 11:23:08 +0530  Update attempts/README.md with Attempt 2 commit and tag
+31ed371 2026-11-26 11:22:54 +0530  (tag: attempt-2-shape-hierarchy) Attempt 2: coordinate Shape hierarchy, 110-polyplet generator, and 8/8 tests
+58387e9 2026-11-26 11:04:59 +0530  Sync attempts/README.md and Attempt 1 tag with doc cleanup
+9e2cfc7 2026-11-26 10:55:41 +0530  (tag: attempt-1-naive-oop) Remove answers.txt references from documentation prose
+ab56d94 2026-11-26 10:54:15 +0530  Update attempts/README.md with Attempt 1 commit and tag
+4831027 2026-11-26 10:54:02 +0530  Attempt 1: bug fixes, naive OOP registry, headless smoke tests, and audit
+3adc3c4 2026-11-26 02:21:17 +0530  Update attempts/README.md with Attempt 0 commit and tag
+846e81b 2026-11-26 02:21:03 +0530  (tag: attempt-0-baseline) Attempt 0: faithful Appendix A-D baseline and diagnostic report
+265711d 2026-11-26 02:17:32 +0530  Initialize ExTetris repository skeleton
+
+attempt-0-baseline Attempt 0: faithful Appendix A-D baseline and diagnostic report
+attempt-1-naive-oop Remove answers.txt references from documentation prose
+attempt-2-shape-hierarchy Attempt 2: coordinate Shape hierarchy, 110-polyplet generator, and 8/8 tests
+attempt-3-engine-and-distributions Attempt 3: fix IEEE-754 float rounding in speed_up/slow_down
+attempt-4-designer-and-tests Attempt 4: ExTetrisBuilder, JSON validation, persistence, Studio notebook, and 22/22 tests
+attempt-5-final Attempt 5 final docs: add AI_INTERACTION_LOG portability guide and accurate persistence limits

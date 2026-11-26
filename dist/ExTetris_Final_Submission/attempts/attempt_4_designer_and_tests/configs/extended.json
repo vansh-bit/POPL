@@ -1,0 +1,23 @@
+{
+  "name": "Extended Polyplet Tetris",
+  "description": "All 34 one-sided 4-polyplets with adaptive difficulty balancing.",
+  "variant": "extended",
+  "piece_scope": "one_sided",
+  "connectivity": "any",
+  "max_holes": 4,
+  "board": {
+    "width": 12,
+    "height": 22
+  },
+  "gameplay": {
+    "initial_speed_ms": 850,
+    "speed_factor": 0.92,
+    "enable_wall_kicks": true,
+    "enable_ghost": true
+  },
+  "distribution": {
+    "strategy": "adaptive",
+    "seed": null
+  },
+  "renderer": "cli"
+}

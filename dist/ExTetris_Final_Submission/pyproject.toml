@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "extetris"
+version = "0.1.0"
+description = "Extended Tetris (ExTetris) extensible game engine, shape hierarchy, and variant studio for CS F301 PoPL."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "GPL-3.0-or-later"}
+authors = [
+    {name = "Vansh Sharma"},
+]
+dependencies = [
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "jsonschema>=4.18",
+]
+notebook = [
+    "jupyter>=1.0",
+    "ipywidgets>=8.0",
+]
+
+[project.scripts]
+extetris = "extetris.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["extetris*"]
+
+[tool.setuptools.package-data]
+"extetris.config" = ["schema.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v"

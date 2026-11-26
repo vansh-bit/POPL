@@ -43,7 +43,7 @@ Or open the no-code interactive designer:
 jupyter notebook ExTetris_Studio.ipynb
 ```
 
-> **Note on Preserved History:** The `attempts/` folder (`attempt_0_appendix_baseline/` through `attempt_4_designer_and_tests/`) and `AI_INTERACTION_LOG.md` preserve every historical development snapshot directly inside the distribution ZIP even though `.git/` metadata is excluded from packaged archives (commit hashes and tags referenced in reports come from the local development Git repository, with no remote URL configured).
+> **Note on Preserved History:** The `attempts/` folder (`attempt_0_appendix_baseline/` through `attempt_4_designer_and_tests/`) and `AI_INTERACTION_LOG.md` preserve every historical development snapshot directly inside the distribution ZIP even though `.git/` metadata is excluded from packaged archives (commit hashes and tags referenced in reports come from the local development Git repository, with no remote URL configured). See GIT_HISTORY.txt for the git log these hashes come from. For how the prompt sequence was prepared and the single-day 26 November 2026 build timeline (plus why historical `test_attempt2.py` requires `tkinter`), see the **Prompt Preparation and Timeline** section in [docs/AI_USAGE_REPORT.md](docs/AI_USAGE_REPORT.md).
 
 ## Documentation Suite
 - [Design Document](docs/DESIGN.md) — Architecture, division of labour, and core design decisions

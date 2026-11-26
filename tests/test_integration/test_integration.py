@@ -41,7 +41,11 @@ class TestIntegrationWorkflows(unittest.TestCase):
         tk_r.close()
 
     def test_tk_is_available_returns_false_without_display(self):
-        import tkinter as tk
+        try:
+            import tkinter as tk
+        except ImportError:
+            self.assertFalse(TkinterRenderer.is_available())
+            return
         from unittest import mock
 
         with mock.patch.object(tk, "Tk", side_effect=tk.TclError("no display name")):

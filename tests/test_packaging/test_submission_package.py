@@ -33,7 +33,25 @@ class TestSubmissionPackage(unittest.TestCase):
                 zf.extractall(extract_dir)
             self.assertTrue((extract_dir / "pyproject.toml").exists())
             self.assertTrue((extract_dir / "configs" / "classic.json").exists())
+            self.assertTrue((extract_dir / "README.md").exists())
+            self.assertTrue((extract_dir / "README.pdf").exists())
+            self.assertTrue((extract_dir / "AI_INTERACTION_LOG.md").exists())
+            self.assertTrue((extract_dir / "AI_INTERACTION_LOG.pdf").exists())
+            self.assertTrue((extract_dir / "GIT_HISTORY.txt").exists())
             self.assertTrue((extract_dir / "docs" / "AI_USAGE_REPORT.md").exists())
+            self.assertTrue((extract_dir / "docs" / "AI_USAGE_REPORT.pdf").exists())
+            self.assertTrue((extract_dir / "docs" / "UML.pdf").exists())
+            diagrams_dir = extract_dir / "docs" / "diagrams"
+            self.assertTrue(diagrams_dir.is_dir())
+            for diag_name in (
+                "class_hierarchy.svg",
+                "class_hierarchy.png",
+                "fsm_states.svg",
+                "fsm_states.png",
+                "sequence_game_loop.svg",
+                "sequence_game_loop.png",
+            ):
+                self.assertTrue((diagrams_dir / diag_name).exists(), f"Missing diagram {diag_name}")
 
             # 3. Create clean virtual environment and pip install extracted project
             venv_dir = tmp_path / "venv"

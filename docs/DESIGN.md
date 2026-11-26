@@ -45,6 +45,11 @@ Instead of hand-writing $11 \times 2 \times 3 = 66$ boilerplate classes, `extetr
 
 `classify_extetromino()` synthesizes and caches composite classes `(box_cls, morph_cls, cavity_cls)` so every piece supports `isinstance()` across all three axes and reclassifies cleanly on `clone()` / `reclassify()` after rotation.
 
+#### Landing-cavity classification: definition used
+- In [extetris/shapes/base.py](../extetris/shapes/base.py) (`Shape.landing_holes()`), holes are counted for the piece in its **current orientation** by scanning each column `c` of its normalized `(height, width)` bounding box, finding the topmost occupied row `top_r` in column `c`, and counting every empty cell `(row, c)` strictly below `top_r` (`top_r < row < height`).
+- [extetris/shapes/hierarchy.py](../extetris/shapes/hierarchy.py) (`classify_extetromino()`) assigns `FlatLandingShape` (`0` holes), `SingleCavityShape` (`1` hole), or `MultiCavityShape` (`>= 2` holes) using `landing_holes()` in the piece's **current orientation**, and composite classes bind `clone()` / `reclassify()` back to `classify_extetromino()` so rotating a piece (e.g., via `ExTetrisEngine._rotate()`, which invokes `rotated.reclassify()`) reclassifies it dynamically for the new orientation. (`landing_hole_profile()`, `min_landing_holes()`, and `max_landing_holes()` also compute counts across all four 90-degree rotations without mutating the shape.)
+- [USER TO CONFIRM: matches the definition in the 6 November tutorial video]
+
 ### 3.3 Functional-OO Shape Distributions (PDF Section 3.2)
 - Replaces list-index repetition (which also suffered hidden bias in Attempt 0/1 from rotation duplicates) with first-class `ShapeDistribution` objects.
 - `AdaptiveDifficultyDistribution` computes normalized board distress:

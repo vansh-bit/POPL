@@ -1,0 +1,24 @@
+{
+  "name": "Gentle Diagonal Training",
+  "description": "Diagonal-only pieces restricted to at most 2 landing holes with deterministic seeded bag.",
+  "variant": "custom",
+  "piece_scope": "one_sided",
+  "connectivity": "diagonal",
+  "max_holes": 2,
+  "board": {
+    "width": 10,
+    "height": 20
+  },
+  "gameplay": {
+    "initial_speed_ms": 1100,
+    "speed_factor": 0.94,
+    "enable_wall_kicks": true,
+    "enable_ghost": true
+  },
+  "distribution": {
+    "strategy": "bag",
+    "bag_multiplier": 1,
+    "seed": 42
+  },
+  "renderer": "headless"
+}

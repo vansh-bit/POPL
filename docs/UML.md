@@ -149,6 +149,8 @@ classDiagram
     ExTetrominoFactory ..> ExTetromino : synthesizes 110
 ```
 
+**Standalone Diagram Files:** [class_hierarchy.svg](diagrams/class_hierarchy.svg) | [class_hierarchy.png](diagrams/class_hierarchy.png)
+
 ---
 
 ## 2. Engine Finite State Machine (4-State FSM)
@@ -164,6 +166,8 @@ stateDiagram-v2
     GAME_OVER --> READY : "new_game(auto_start=False)"
     PAUSED --> RUNNING : "new_game(auto_start=True)"
 ```
+
+**Standalone Diagram Files:** [fsm_states.svg](diagrams/fsm_states.svg) | [fsm_states.png](diagrams/fsm_states.png)
 
 ---
 
@@ -195,3 +199,5 @@ sequenceDiagram
         Engine-->>Renderer: emit("render_needed", "lines_cleared", "game_over")
     end
 ```
+
+**Standalone Diagram Files:** [sequence_game_loop.svg](diagrams/sequence_game_loop.svg) | [sequence_game_loop.png](diagrams/sequence_game_loop.png)

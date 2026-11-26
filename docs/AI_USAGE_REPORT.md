@@ -81,3 +81,17 @@ Rather than jumping straight to a finished codebase or discarding flawed drafts,
 ### Candid Assessment of Trade-Offs
 - **What AI Actually Accelerated:** Rapid iteration across six complete runnable snapshots, generating structured multi-axis test matrices, drafting JSON schema presets, and formatting technical/UML/designer documentation.
 - **What Required Human Verification & Debugging:** Every single AI-generated phase required hands-on execution, review, and manual course-correction—AI test fixtures initially contained real logic errors (Attempt 2 full-row blocker self-clearing, Attempt 4 wrong wall-kick obstacle row), `load_engine_state()` silently broke bag parity until initialization order was corrected, inline Make Python raised `SyntaxError`, and `TkinterRenderer.is_available()`/`setup.sh`/`test_submission_package.py` initially hid headless and offline environment assumptions until explicitly audited (`INT-027`).
+
+---
+
+## Prompt Preparation and Timeline
+
+### a) Prompt Preparation
+The chronological log ([../AI_INTERACTION_LOG.md](../AI_INTERACTION_LOG.md)) shows that prompts within each attempt were issued in sequential order (`INT-001` through `INT-027`), and several recorded AI replies refer to structured multi-step `"Prompt N"` / `"5-prompt sequence"` plans (across Attempts 1–5), showing that development followed a prepared prompt sequence.
+[USER TO CONFIRM: who wrote the prompt plan, when, and with what help]
+
+### b) Timeline
+The entire build across Attempts 0 to 5 took place on **26 November 2026** (within the logged session window of approximately `01:55 IST` to `12:50 IST`, as already recorded in Section 3 above). Earlier attempts (`attempts/attempt_0_appendix_baseline/` through `attempts/attempt_4_designer_and_tests/`) are authentic runnable snapshots of what was built during that session.
+
+### c) Historical Test Dependency Note (`test_attempt2.py`)
+`attempts/attempt_2_shape_hierarchy/test_attempt2.py` imports the then-current Tkinter-coupled `TetrisEngine` from Attempt 2 and therefore cannot run on machines without `tkinter`; it is kept unchanged on purpose as a preserved historical snapshot.
