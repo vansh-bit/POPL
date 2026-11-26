@@ -18,7 +18,7 @@
 | `INT-002` | Attempt 1 | Clone baseline & fix 5 concrete runtime bugs | All 5 bug fixes verified in `attempts/attempt_1_naive_oop/` |
 | `INT-003` | Attempt 1 | Naive OOP piece hierarchy & registry refactor | Replaced 73 globals with `PieceRegistry`, `ClassicTetromino`, `ExtendedTetromino` (71 unique) |
 | `INT-004` | Attempt 1 | Decouple `mainloop()` / add `headless=True` & run gameplay smoke tests | All 5 headless gameplay smoke tests passed |
-| `INT-005` | Attempt 1 | Audit Attempt 1 against PDF Section 3.2 & `answers.txt` | Quantified 71 vs 110 polyplets, 21 rotation-dup groups, and 4 structural gaps |
+| `INT-005` | Attempt 1 | Audit Attempt 1 against PDF Section 3.2 & target design | Quantified 71 vs 110 polyplets, 21 rotation-dup groups, and 4 structural gaps |
 | `INT-006` | Attempt 1 | Write `ATTEMPT_1_REPORT.md`, commit & tag `attempt-1-naive-oop` | Report written, logged, committed, and tagged |
 
 ---
@@ -222,7 +222,7 @@
 
 ---
 
-## INT-005 — [Attempt 1] Audit Against PDF Section 3.2 & `answers.txt`
+## INT-005 — [Attempt 1] Audit Against PDF Section 3.2 & Target Design
 - **Timestamp:** 2026-11-26 10:52 IST
 - **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
 
@@ -232,7 +232,7 @@
    ```
 
 2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
-   Executed an exhaustive combinatorial audit of all 8-connected 4-polyplets on a `4×4` grid and compared them against Attempt 1's 71 deduplicated matrices in `attempts/attempt_1_naive_oop/allextetrominoes.py`, alongside a structural review against PDF Section 3.2 and `answers.txt`.
+   Executed an exhaustive combinatorial audit of all 8-connected 4-polyplets on a `4×4` grid and compared them against Attempt 1's 71 deduplicated matrices in `attempts/attempt_1_naive_oop/allextetrominoes.py`, alongside a structural review against PDF Section 3.2 and the target design specification.
 
    Observed audit output:
    ```text
@@ -254,7 +254,7 @@
    This audit establishes the exact mathematical and architectural evidence showing why Attempt 1's matrix-wrapped OOP approach is insufficient and why Attempt 2 and Attempt 3 are necessary.
 
 4. **What I Planned:**
-   Compute the exact count of fixed (110), one-sided (34), and free (22) 8-connected 4-polyplets on a `4×4` grid, compare them with Attempt 1's 71 matrices, inspect bounding boxes, and evaluate Section 3.2 / `answers.txt` gaps.
+   Compute the exact count of fixed (110), one-sided (34), and free (22) 8-connected 4-polyplets on a `4×4` grid, compare them with Attempt 1's 71 matrices, inspect bounding boxes, and evaluate Section 3.2 / target-architecture gaps.
 
 5. **What I Implemented:**
    Ran a non-destructive Python combinatorial audit script over `attempts/attempt_1_naive_oop/allextetrominoes.py`. (No code edits in this step.)

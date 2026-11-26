@@ -7,7 +7,7 @@
 ---
 
 ## 1. Objective
-Stabilize the Attempt 0 baseline by fixing its five concrete runtime/boundary bugs, attempt a first **naive object-oriented refactor** (while still keeping matrix-backed definitions and Tkinter structure), verify end-to-end gameplay via headless smoke tests, and audit the result against `PoPL2026AssignmentExTetris.pdf` (Section 3.2) and `answers.txt` to expose where the matrix-wrapper approach falls short.
+Stabilize the Attempt 0 baseline by fixing its five concrete runtime/boundary bugs, attempt a first **naive object-oriented refactor** (while still keeping matrix-backed definitions and Tkinter structure), verify end-to-end gameplay via headless smoke tests, and audit the result against `PoPL2026AssignmentExTetris.pdf` (Section 3.2) and the target architecture to expose where the matrix-wrapper approach falls short.
 
 ## 2. Files Modified in `attempts/attempt_1_naive_oop/`
 | File | Key Changes Over Attempt 0 |
