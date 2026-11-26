@@ -30,6 +30,11 @@
 | `INT-014` | Attempt 3 | Implement `AbstractRenderer` (`Headless`, `CLI`, optional `Tk`) & `play.py` | Headless sim, ANSI CLI, optional Tk & graceful fallback verified |
 | `INT-015` | Attempt 3 | Write & run unified `test_attempt3.py` suite | 8/8 integration tests (`2.009s`) + 7/7 distribution/board tests (`1.440s`) passed |
 | `INT-016` | Attempt 3 | Audit Attempt 3 gaps, write `ATTEMPT_3_REPORT.md`, commit & tag | Audited (`2,278` lines); committed & tagged `attempt-3-engine-and-distributions` |
+| `INT-017` | Attempt 4 | Implement explicit JSON config schema, validator, loader & presets | 4 presets validated; 14 invalid/malformed config cases cleanly rejected |
+| `INT-018` | Attempt 4 | Implement `ExTetrisBuilder`, `export_variant()`, & state persistence | Caught & fixed bag-advance bug on load; bit-identical resume & variant export verified |
+| `INT-019` | Attempt 4 | Build & execute `ExTetris_Studio.ipynb` + `play.py` launcher | All 6 code cells executed cleanly via `nbconvert`; `play.py --config` verified |
+| `INT-020` | Attempt 4 | Build & run categorized `tests/` suite (all 9 functional areas) | Fixed 1 rotation test fixture; 22/22 tests passed (`6.638s`) |
+| `INT-021` | Attempt 4 | Audit Attempt 4, write `ATTEMPT_4_REPORT.md`, commit & tag | Audited (`4,924` lines); committed & tagged `attempt-4-designer-and-tests` |
 
 ---
 
@@ -765,3 +770,233 @@
 8. **Strengths, Weaknesses & Trade-offs:**
    - **Strengths:** Complete, tested engine/distribution/renderer core ready for the no-code designer interface in Attempt 4.
    - **Weaknesses:** Still requires Python code to configure variants until Attempt 4 adds `ExTetrisBuilder`, JSON schema validation, persistence, and `ExTetris_Studio.ipynb`.
+
+---
+
+## INT-017 — [Attempt 4] Explicit JSON Configuration Schema, Validator & Presets
+- **Timestamp:** 2026-11-26 11:36 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Create attempts/attempt_4_designer_and_tests/ building on Attempt 3. First implement explicit configuration handling (config/schema.json, config/validator.py, config/loader.py) with ConfigValidationError producing clear, human-readable error messages for invalid board sizes, unknown variants/distributions/renderers, invalid hole/speed/seed values, or malformed JSON. Also create four declarative presets (configs/classic.json, configs/extended.json, configs/chaos.json, configs/custom.json) and verify both valid loading and invalid-configuration rejection.
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Bootstrapped `attempts/attempt_4_designer_and_tests/` with Attempt 3's core modules, implemented `config/schema.json`, `config/validator.py` (`ConfigValidationError`, `validate_config`), and `config/loader.py` (`load_config`, `save_config`, `get_default_config`), added the 4 JSON presets under `configs/`, and tested valid loading plus 14 invalid/malformed config cases.
+
+   Observed verification output:
+   ```text
+   Loaded preset classic.json: variant=classic, board={'width': 10, 'height': 20}, strategy=bag, renderer=cli
+   Loaded preset extended.json: variant=extended, board={'width': 12, 'height': 22}, strategy=adaptive, renderer=cli
+   Loaded preset chaos.json: variant=chaos, board={'width': 14, 'height': 24}, strategy=markov, renderer=cli
+   Loaded preset custom.json: variant=custom, board={'width': 10, 'height': 20}, strategy=bag, renderer=headless
+   Rejected [small_board]: - Invalid board.width=2: must be an integer between 4 and 40.
+   Rejected [unknown_variant]: - Unknown variant 'mega_tetris'. Valid options: classic, extended, chaos, custom.
+   Rejected [unknown_dist]: - Unknown distribution.strategy 'quantum'. Valid options: uniform, weighted, bag, adaptive, markov.
+   Rejected [unknown_renderer]: - Unknown renderer 'sdl'. Valid options: headless, cli, tk.
+   Rejected [negative_holes]: - Invalid max_holes=-1: must be null or an integer in 0..6.
+   Rejected [bool_holes]: - Invalid max_holes=True: must be null or an integer in 0..6.
+   Rejected [too_fast_speed]: - Invalid gameplay.initial_speed_ms=40: must be an integer between 100 and 5000 ms.
+   Rejected [bad_seed_type]: - Invalid distribution.seed='abc': must be null or an integer.
+   Rejected [bool_seed]: - Invalid distribution.seed=False: must be null or an integer.
+   Rejected [unknown_key_typo]: - Unknown top-level key(s): widht.
+   Rejected [classic_plus_diagonal]: - Incompatible settings: variant='classic' contains only orthogonal shapes and cannot use connectivity='diagonal'.
+   Rejected [negative_weight]: - Invalid weight for piece '1' (-2): weights must be non-negative numbers.
+   Rejected [malformed_json]: - Malformed JSON in '.../broken.json' at line 1, column 14: ...
+   Rejected [missing_file]: - Configuration file not found: .../missing.json
+   ```
+
+3. **What I Interpreted:**
+   Non-programmer configuration relies on catching typos, out-of-range parameters, and semantic mismatches upfront with actionable error messages rather than failing deep inside engine or numpy code.
+
+4. **What I Planned:**
+   Define a strict `schema.json` (`additionalProperties: false`), implement `validate_config()` with strict integer vs. boolean guards (`not isinstance(val, bool)`) and semantic checks (e.g., `classic` + `diagonal`), wrap JSON parse/IO errors cleanly in `load_config()`, and author the 4 presets (`classic`, `extended`, `chaos`, `custom`).
+
+5. **What I Implemented:**
+   - [attempts/attempt_4_designer_and_tests/config/schema.json](attempts/attempt_4_designer_and_tests/config/schema.json)
+   - [attempts/attempt_4_designer_and_tests/config/validator.py](attempts/attempt_4_designer_and_tests/config/validator.py)
+   - [attempts/attempt_4_designer_and_tests/config/loader.py](attempts/attempt_4_designer_and_tests/config/loader.py)
+   - [attempts/attempt_4_designer_and_tests/configs/classic.json](attempts/attempt_4_designer_and_tests/configs/classic.json), [extended.json](attempts/attempt_4_designer_and_tests/configs/extended.json), [chaos.json](attempts/attempt_4_designer_and_tests/configs/chaos.json), [custom.json](attempts/attempt_4_designer_and_tests/configs/custom.json)
+
+6. **What I Got (Did It Work?):**
+   Yes—all 4 presets validated and loaded cleanly, and all 14 invalid/incompatible/malformed configuration cases raised `ConfigValidationError` with exact field and line/column diagnostics.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Explicitly guarded against Python's `isinstance(True, int) == True` pitfall in `_is_strict_int()` so booleans passed to `max_holes` or `seed` are properly rejected rather than treated as `0` or `1`, and combined structural validation with optional `jsonschema` cross-validation.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Human-readable multi-error reporting, zero-dependency core validation (with optional `jsonschema` support), and strict unknown-key rejection.
+   - **Weaknesses:** Still needs `ExTetrisBuilder`, variant export, save/load/resume persistence (Prompt 2), and `ExTetris_Studio.ipynb` (Prompt 3).
+
+---
+
+## INT-018 — [Attempt 4] Fluent `ExTetrisBuilder`, Variant Export & Save/Load/Resume Persistence
+- **Timestamp:** 2026-11-26 11:37 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   In attempts/attempt_4_designer_and_tests/, implement: (1) the Fluent ExTetrisBuilder API (use_classic_tetris(), use_extended_tetris(), filter_max_holes(n), filter_orthogonal_only(), filter_diagonal_only(), with_board_size(w, h), with_speed(...), with_distribution(...), with_renderer(...), from_json(...), build(), and export_variant(out_dir) to release a configured variant with documentation), and (2) full game-state persistence (save_state(path) / load_state(path) saving board grid, active/next pieces, cursor, score, lines, level, FSM state, and seed so a paused/running game can resume identically, alongside text export). Verify builder chaining, variant export, and save/load/resume
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Implemented `ExTetrisBuilder` and `load_game_from_json()` in `builder.py`, JSON state persistence (`save_engine_state`, `load_engine_state`, `export_text_board`) in `persistence.py`, and `save_state`/`load_state`/`export_text_board` hooks on `ExTetrisEngine`.
+
+   During initial verification, save/load/resume parity failed on the 4th move after resume (`orig: 97 26 (0, 3) rest: 97 29 (0, 3)`) because passing the deserialized `BagDistribution` into `ExTetrisEngine.__init__()` caused `_init_pieces()` to pop 2 items off `_bag` before `load_engine_state()` restored `current_piece` and `next_piece`. Assigning `engine.distribution` after `ExTetrisEngine.__init__()` resolved the bug, yielding:
+   ```text
+   1. Fluent ExTetrisBuilder chaining + headless run verified, score = 38
+   2. load_game_from_json(configs/custom.json) verified.
+   3. Empty filtered pool rejected: - Current variant and filters leave 0 matching ExTetromino shapes.
+   4. export_variant() generated config/docs/launcher and ran standalone cleanly, piece_count = 9
+   5. Save / Load / Resume bit-identical state & RNG continuation verified!
+   6. Corrupt save file rejected: Invalid or unsupported ExTetris state file format.
+   ```
+
+3. **What I Interpreted:**
+   Game designers need a fluent Python API (`ExTetrisBuilder`) and one-command variant export (`export_variant()` generating config, docs, and a standalone launcher), while players/tests need true state persistence (`save_state`/`load_state`) that restores not just the board grid but also exact piece queue and RNG state.
+
+4. **What I Planned:**
+   Implement `persistence.py` serializing board grid, pieces, cursor, FSM state, scoring, and `Distribution` RNG/bag/Markov state; implement `ExTetrisBuilder` with fluent setters, validation, and `export_variant()`; and test both standalone variant execution and resume parity.
+
+5. **What I Implemented:**
+   - [attempts/attempt_4_designer_and_tests/persistence.py](attempts/attempt_4_designer_and_tests/persistence.py)
+   - [attempts/attempt_4_designer_and_tests/builder.py](attempts/attempt_4_designer_and_tests/builder.py)
+   - [attempts/attempt_4_designer_and_tests/engine.py](attempts/attempt_4_designer_and_tests/engine.py) (`save_state`, `load_state`, `export_text_board`)
+
+6. **What I Got (Did It Work?):**
+   Yes—after fixing the post-`__init__` distribution restoration order in `persistence.py`, fluent builder chaining, `from_json`, empty-pool rejection, standalone `export_variant()` execution (`9` pieces), bit-identical save/load/resume parity, and corrupt-save rejection all passed (`exit code 0`).
+
+7. **How I Got It (Modifications & Independent Research):**
+   - Diagnosed the exact bag-length divergence (`[28, 35, 48, 29, 49, 26]` vs `[28, 35, 48, 29]`) by printing `sim_eng.distribution._bag` vs `restored.distribution._bag` right after `load_state()`. Passing `distribution=None` into `engine_cls(...)` and assigning `engine.distribution` afterward prevented `_init_pieces()` from consuming restored bag/RNG state.
+   - Embedded `ENGINE_DIR` fallback into the generated `run_variant.py` so exported variants run from any output directory.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** One-call variant release with auto-generated documentation; bit-identical save/load/resume across RNG/bag state; clean fluent API.
+   - **Weaknesses:** Still needs `ExTetris_Studio.ipynb` for interactive no-code design (Prompt 3) and the categorized test suite (Prompt 4).
+
+---
+
+## INT-019 — [Attempt 4] No-Code `ExTetris_Studio.ipynb` & Variant Launcher
+- **Timestamp:** 2026-11-26 11:40 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Create ExTetris_Studio.ipynb in attempts/attempt_4_designer_and_tests/ wired directly to config/loader.py and ExTetrisBuilder (no duplicated game rules). Demonstrate a complete no-code workflow: inspecting the 110 shapes by bounding box/morphology/landing holes, adjusting variant settings (board size, distribution, max holes, connectivity, speed) via interactive widgets / JSON config, previewing sampled distributions, exporting a standalone variant JSON + documentation, and launching a headless simulation or GUI/CLI session without editing Python source. Execute the notebook non-interactively to verify every code cell runs cleanly.
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Created `attempts/attempt_4_designer_and_tests/ExTetris_Studio.ipynb` wired directly to `config.load_config`/`validate_config` and `ExTetrisBuilder`, executed all 6 code cells non-interactively with `jupyter nbconvert --to notebook --execute --inplace ExTetris_Studio.ipynb`, and added `play.py` supporting `--config` JSON launching.
+
+   Observed notebook execution output:
+   ```text
+   [NbConvertApp] Writing 51091 bytes to ExTetris_Studio.ipynb
+   Cell 1 (exec_count=1): Loaded ExTetris Studio from: .../attempts/attempt_4_designer_and_tests
+   Cell 3 (exec_count=2): Catalog Summary (110 fixed, 34 one-sided, 22 free), 3x4 Diagonal ID 78 preview
+   Cell 5 (exec_count=3): Active validated studio_config: Studio Custom Diagonal Variant | board= {'width': 12, 'height': 20} | strategy= adaptive
+   Cell 7 (exec_count=4): Rejected invalid width=2 and classic+diagonal conflict via ConfigValidationError
+   Cell 9 (exec_count=5): Filtered pool size: 16 shapes (all diagonal=True, max_holes<=3), sampled 30 pieces
+   Cell 11 (exec_count=6): Exported variant_config.json, VARIANT_README.md, run_variant.py; standalone launcher & 12-step headless sim (Score=34) passed
+   ```
+
+3. **What I Interpreted:**
+   PDF Section 3 explicitly draws an analogy to Jupyter notebooks empowering non-programmers. `ExTetris_Studio.ipynb` must act as a true no-code studio backed 100% by `config/` and `ExTetrisBuilder` without duplicating any game rules.
+
+4. **What I Planned:**
+   Author a 6-code-cell notebook covering catalog inspection, `ipywidgets` variant controls + live validation, invalid-config rejection demo, distribution sampling preview, standalone variant export + subprocess run, and headless simulation; verify non-interactive execution via `nbconvert`; and add `play.py --config`.
+
+5. **What I Implemented:**
+   - [attempts/attempt_4_designer_and_tests/ExTetris_Studio.ipynb](attempts/attempt_4_designer_and_tests/ExTetris_Studio.ipynb)
+   - [attempts/attempt_4_designer_and_tests/play.py](attempts/attempt_4_designer_and_tests/play.py)
+
+6. **What I Got (Did It Work?):**
+   Yes—`jupyter nbconvert --execute` ran all 6 code cells (`exec_count=1..6`) with zero cell errors and populated outputs (`51,091` bytes), and `play.py --config configs/custom.json` launches configured variants directly.
+
+7. **How I Got It (Modifications & Independent Research):**
+   An initial inline command hit shell backtick/quote escaping issues when generating the notebook; switched to a single-quoted heredoc (`cat << 'EOF' | python3`) so notebook strings serialized cleanly before `nbconvert` execution.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** True no-code variant studio using a single validation/builder source of truth; works both interactively with `ipywidgets` and deterministically in headless `nbconvert`.
+   - **Weaknesses:** Still needs the full categorized test suite under `tests/` (Prompt 4) to verify all 9 categories together.
+
+---
+
+## INT-020 — [Attempt 4] Categorized Test Suite Across All Functional Areas
+- **Timestamp:** 2026-11-26 11:41 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Build a comprehensive categorized test suite in attempts/attempt_4_designer_and_tests/tests/ covering: (1) Shape generation, (2) Shape hierarchy, (3) Board, (4) Rotations & wall kicks, (5) Seeded distributions & combinators, (6) Engine FSM & scoring, (7) Configuration (valid presets, Builder, and invalid-configuration error cases), (8) Persistence (save, load, resume), and (9) Integration (CLI, Headless, optional Tkinter, and Notebook workflow). Run the full suite, fix any bugs uncovered, and show exact test counts and runtimes
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Created 8 categorized test modules under `attempts/attempt_4_designer_and_tests/tests/` (`test_shapes`, `test_board`, `test_rotations`, `test_distributions`, `test_engine`, `test_configuration`, `test_persistence`, `test_integration`) and ran `python3 -m unittest discover -s tests -t . -v`.
+
+   Initial run failed 1 of 22 tests (`test_wall_kicks_and_invalid_rotations` in `8.016s`) because the obstacle row was placed at row `10` instead of row `8`, leaving row `8` clear for the rotated `1×4` horizontal I-piece. Moving the obstacle row to row `8` fixed the test, yielding:
+   ```text
+   Ran 22 tests in 6.638s
+
+   OK
+   ```
+
+3. **What I Interpreted:**
+   All Attempt 4 subsystems—shape generation/hierarchy, board, rotations/wall kicks, seeded distributions, FSM engine, config validation/Builder, state persistence, and CLI/Headless/Tk/Notebook workflows—needed to be organized into clear test categories and verified in one run.
+
+4. **What I Planned:**
+   Create modular `unittest` files under `tests/test_*/` covering every category, including invalid-configuration rejection, bit-identical save/load/resume, and headless `nbconvert` notebook execution, then run the full discovery suite.
+
+5. **What I Implemented:**
+   - `attempts/attempt_4_designer_and_tests/tests/test_shapes/test_generation_and_hierarchy.py`
+   - `attempts/attempt_4_designer_and_tests/tests/test_board/test_board.py`
+   - `attempts/attempt_4_designer_and_tests/tests/test_rotations/test_rotations_and_wallkicks.py`
+   - `attempts/attempt_4_designer_and_tests/tests/test_distributions/test_distributions.py`
+   - `attempts/attempt_4_designer_and_tests/tests/test_engine/test_engine_fsm.py`
+   - `attempts/attempt_4_designer_and_tests/tests/test_configuration/test_config_and_builder.py`
+   - `attempts/attempt_4_designer_and_tests/tests/test_persistence/test_persistence.py`
+   - `attempts/attempt_4_designer_and_tests/tests/test_integration/test_integration.py`
+
+6. **What I Got (Did It Work?):**
+   Yes—after fixing the obstacle row in `test_wall_kicks_and_invalid_rotations`, all **22 tests passed in `6.638s` (`OK`)**, including live notebook execution via `jupyter nbconvert`.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Diagnosed `AssertionError: True is not false` on `eng.rotate_cw()` at `cursor = (8, 5)`: a `4×1` vertical piece at `(8, 5)` occupies rows `8..11`, and when rotated CW to `1×4` horizontal, it lies entirely on row `8`, so blocking row `10` did not block the rotation. Moving the single-gap wall (`area[8, :] = True; area[8, 5] = False`) properly forced every kick offset `(0, ±1, ±2)` to collide.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Comprehensive categorized suite covering valid, invalid-config, persistence, and end-to-end notebook/CLI integration in under 7 seconds.
+   - **Weaknesses:** Still lives inside `attempts/attempt_4_designer_and_tests/`; needs promotion to the root `extetris/` package, `Makefile`/shell scripts, `test_packaging/` clean-venv verification, and final `docs/` in Attempt 5.
+
+---
+
+## INT-021 — [Attempt 4] Audit Attempt 4, Write Report, Commit & Tag
+- **Timestamp:** 2026-11-26 11:43 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Audit attempts/attempt_4_designer_and_tests/ against all assignment requirements to list what Attempt 4 completed and what remains for Attempt 5 (promoting the clean modular package to root extetris/, adding Makefile/setup.sh/run.sh/test.sh, clean-environment packaging verification in tests/test_packaging/, and finalizing docs/). Write attempts/attempt_4_designer_and_tests/ATTEMPT_4_REPORT.md, update AI_INTERACTION_LOG.md, commit Attempt 4, tag it attempt-4-designer-and-tests, and update attempts/README.md
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Audited the full file inventory under `attempts/attempt_4_designer_and_tests/` (`4,924` lines across modules, JSON schemas/presets, `ExTetris_Studio.ipynb`, and 8 categorized test suites), wrote `ATTEMPT_4_REPORT.md`, logged `INT-021` in `AI_INTERACTION_LOG.md`, committed and tagged `attempt-4-designer-and-tests`, and updated `attempts/README.md`.
+
+3. **What I Interpreted:**
+   With the designer layer, validation, persistence, notebook, and 22 categorized tests passing, we need a clear boundary audit separating Attempt 4's completed functionality from Attempt 5's packaging, build scripts, clean-venv verification, and final documentation.
+
+4. **What I Planned:**
+   Run file/line audit across `attempts/attempt_4_designer_and_tests/`, write `ATTEMPT_4_REPORT.md`, log `INT-021`, commit and tag `attempt-4-designer-and-tests`, and record the commit hash in `attempts/README.md`.
+
+5. **What I Implemented:**
+   - [attempts/attempt_4_designer_and_tests/ATTEMPT_4_REPORT.md](attempts/attempt_4_designer_and_tests/ATTEMPT_4_REPORT.md)
+   - Updated [AI_INTERACTION_LOG.md](AI_INTERACTION_LOG.md) and [attempts/README.md](attempts/README.md).
+
+6. **What I Got (Did It Work?):**
+   Yes—Attempt 4 snapshot committed cleanly, tagged `attempt-4-designer-and-tests`, and indexed in `attempts/README.md`.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Verified every file under `attempts/attempt_4_designer_and_tests/` excluding `__pycache__` and `.ipynb_checkpoints` before committing.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** End-to-end designer workflow (`JSON` + `ExTetrisBuilder` + `ExTetris_Studio.ipynb` + `save/load/resume` + `22/22` tests) works self-contained inside `attempts/attempt_4_designer_and_tests/`.
+   - **Weaknesses:** Needs final package promotion to root `extetris/`, `Makefile`/shell scripts, clean-venv packaging test, and final `docs/` in Attempt 5.

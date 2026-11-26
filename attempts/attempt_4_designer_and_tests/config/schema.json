@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExTetris Game Variant Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 400
+    },
+    "variant": {
+      "type": "string",
+      "enum": ["classic", "extended", "chaos", "custom"]
+    },
+    "piece_scope": {
+      "type": "string",
+      "enum": ["one_sided", "fixed"]
+    },
+    "connectivity": {
+      "type": "string",
+      "enum": ["any", "orthogonal", "diagonal"]
+    },
+    "max_holes": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "maximum": 6
+    },
+    "board": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 40
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 6,
+          "maximum": 60
+        }
+      }
+    },
+    "gameplay": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "initial_speed_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 5000
+        },
+        "speed_factor": {
+          "type": "number",
+          "exclusiveMinimum": 0.1,
+          "maximum": 1.0
+        },
+        "enable_wall_kicks": {
+          "type": "boolean"
+        },
+        "enable_ghost": {
+          "type": "boolean"
+        }
+      }
+    },
+    "distribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["uniform", "weighted", "bag", "adaptive", "markov"]
+        },
+        "bag_multiplier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "repeat_penalty": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "weights_by_id": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0.0
+          }
+        },
+        "seed": {
+          "type": ["integer", "null"]
+        }
+      }
+    },
+    "renderer": {
+      "type": "string",
+      "enum": ["headless", "cli", "tk"]
+    }
+  }
+}
