@@ -25,6 +25,11 @@
 | `INT-009` | Attempt 2 | Implement bounding-box, morphology & landing-cavity subclasses | All 110 shapes verified across 11 boxes (incl. 3×4, 4×3), morphology & cavities |
 | `INT-010` | Attempt 2 | Integrate `Board`, `TetrisEngine`, & run `unittest` verification suite | 8/8 unit tests passed (`0.298s`) incl. headless gameplay & Tkinter smoke |
 | `INT-011` | Attempt 2 | Audit Attempt 2 gaps, write `ATTEMPT_2_REPORT.md`, commit & tag | Gaps documented; committed & tagged `attempt-2-shape-hierarchy` |
+| `INT-012` | Attempt 3 | Implement Board metrics & Functional-OO `ShapeDistribution` | 7/7 seeded board/distribution/combinator tests passed (`0.231s`) |
+| `INT-013` | Attempt 3 | Implement UI-agnostic 4-state FSM `ExTetrisEngine` & callbacks | FSM, wall kicks, ghost piece, scoring, level scaling & zero-Tk verified |
+| `INT-014` | Attempt 3 | Implement `AbstractRenderer` (`Headless`, `CLI`, optional `Tk`) & `play.py` | Headless sim, ANSI CLI, optional Tk & graceful fallback verified |
+| `INT-015` | Attempt 3 | Write & run unified `test_attempt3.py` suite | 8/8 integration tests (`2.009s`) + 7/7 distribution/board tests (`1.440s`) passed |
+| `INT-016` | Attempt 3 | Audit Attempt 3 gaps, write `ATTEMPT_3_REPORT.md`, commit & tag | Audited (`2,278` lines); committed & tagged `attempt-3-engine-and-distributions` |
 
 ---
 
@@ -521,3 +526,242 @@
 8. **Strengths, Weaknesses & Trade-offs:**
    - **Strengths:** Completely solves PDF Section 3.2's shape-hierarchy and no-matrix requirements with 8/8 passing tests.
    - **Weaknesses:** Engine/distribution/renderer decoupling and non-programmer configuration remain for Attempts 3 and 4.
+
+---
+
+## INT-012 — [Attempt 3] Board Metrics & Functional-OO `ShapeDistribution` Framework
+- **Timestamp:** 2026-11-26 11:28 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Create attempts/attempt_3_engine_and_distributions/ building on Attempt 2's coordinate shape hierarchy. First upgrade Board with heuristic metrics (count_holes(), get_max_height(), get_bumpiness(), is_valid_position(), get_ghost_row(), and clone()). Then design the Functional-OO ShapeDistribution hierarchy (UniformDistribution, WeightedDistribution, BagDistribution, AdaptiveDifficultyDistribution, MarkovDistribution) supporting deterministic seeds and higher-order combinators (.filter(), .map(), .blend(), .conditional(), +, and >>). Write seeded tests verifying distribution composition, statistical weights, bag guarantees, adaptive distress response, and exact seed reproducibility.
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Bootstrapped `attempts/attempt_3_engine_and_distributions/` with Attempt 2's coordinate shape modules (`shape.py`, `hierarchy.py`, `factory.py`), implemented upgraded `Board` heuristics (`board.py`) and the Functional-OO `ShapeDistribution` hierarchy + combinators (`distributions.py`), and verified everything with seeded tests (`test_board_and_distributions.py`).
+
+   Observed output:
+   ```text
+   test_heights_holes_bumpiness_and_ghost ... ok
+   test_adaptive_difficulty_distress_response ... ok
+   test_bag_distribution_guarantees ... ok
+   test_combinators_filter_map_blend_add_rshift_conditional ... ok
+   test_markov_transitions_and_anti_repeat ... ok
+   test_uniform_and_seed_reproducibility ... ok
+   test_weighted_statistical_proportions ... ok
+
+   Ran 7 tests in 0.231s
+
+   OK
+   ```
+
+3. **What I Interpreted:**
+   To replace Attempt 0/1's crude list-repetition sampling with a true Functional-OO design (Section 3.2), distributions must be first-class seeded objects that compose cleanly via `.filter()`, `.map()`, `.blend()`, `.conditional()`, `+`, and `>>`, while `Board` exposes the height/hole/bumpiness telemetry needed by adaptive sampling and ghost projection.
+
+4. **What I Planned:**
+   Upgrade `Board` with `is_valid_position`, `get_ghost_row`, `column_heights`, `get_max_height`, `count_holes`, and `get_bumpiness`; build `ShapeDistribution` (`Uniform`, `Weighted`, `Bag`, `AdaptiveDifficulty`, `Markov`) and combinator wrappers (`Filtered`, `Mapped`, `Blended`, `Conditional`); and test both statistical behavior and exact seed reproducibility.
+
+5. **What I Implemented:**
+   - [attempts/attempt_3_engine_and_distributions/board.py](attempts/attempt_3_engine_and_distributions/board.py)
+   - [attempts/attempt_3_engine_and_distributions/distributions.py](attempts/attempt_3_engine_and_distributions/distributions.py)
+   - [attempts/attempt_3_engine_and_distributions/test_board_and_distributions.py](attempts/attempt_3_engine_and_distributions/test_board_and_distributions.py)
+
+6. **What I Got (Did It Work?):**
+   Yes—all 7 seeded test suites passed in `0.231s` (`py_compile` + `unittest`), confirming exact board heuristics, ghost landing rows, statistical weight proportions (`10:1:1`), 7-bag / 2-bag guarantees, adaptive distress inversion, Markov transition matrices, and reproducible composed pipelines.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Checked seed inheritance across combinators (`blend`, `+`, `filter`, `map`, `conditional`) so composed expressions like `d1.blend(d2, weight=0.8, seed=777)` produce bit-identical sequences across independent runs when given matching component/combinator seeds.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Clean Functional-OO combinator algebra, deterministic seeded testing, zero hard-coded piece data, and board-state-aware adaptive sampling.
+   - **Weaknesses:** Still needs the decoupled FSM `ExTetrisEngine` (Prompt 2) and `AbstractRenderer` (`Headless`/`CLI`/optional `Tkinter`) (Prompt 3) to drive full games.
+
+---
+
+## INT-013 — [Attempt 3] UI-Agnostic FSM `ExTetrisEngine` & Observer Callbacks
+- **Timestamp:** 2026-11-26 11:29 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Implement the UI-agnostic ExTetrisEngine in attempts/attempt_3_engine_and_distributions/ with an explicit 4-state FSM (READY, RUNNING, PAUSED, GAME_OVER), Observer callbacks (register_callback / event notifications for state, piece lock, line clear, level up, and game over), wall-kick rotation recovery (offsets 0, ±1, ±2), ghost-piece projection, soft/hard drop scoring (+1 / +2 per cell), and level/speed progression (level = 1 + lines_cleared // 10, drop_speed_ms = max(100, int(initial_speed * 0.92**(lines // 10)))). Verify FSM transitions, wall kicks, ghost landing, callbacks, and level scaling without any UI dependency.
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Implemented `ExTetrisEngine` and `GameState` in `attempts/attempt_3_engine_and_distributions/engine.py` with zero UI imports, and ran verification checks on FSM transitions, Observer events, wall kicks, ghost projection, soft/hard drop scoring, and level/speed scaling.
+
+   Observed output:
+   ```text
+   1. Zero tkinter/UI dependency in engine.py verified.
+   2. 4-state FSM READY -> RUNNING -> PAUSED -> RUNNING verified.
+   3. Wall-kick (0, -2) rotation recovery verified at right wall.
+   4. Ghost projection, composite matrix, soft drop (+1) & hard drop (+2/cell) verified.
+   5. Level/speed progression (12 lines -> level 2, 920ms) & Observer events verified.
+   6. GAME_OVER transition & Observer event verified.
+   ```
+
+3. **What I Interpreted:**
+   To completely decouple game rules from presentation, `ExTetrisEngine` must own the 4-state FSM, piece spawning, wall kicks, ghost projection, scoring, and speed progression without importing any UI toolkit, communicating outward strictly through `register_callback()` events and `get_render_composite()`.
+
+4. **What I Planned:**
+   Define `GameState` enum (`READY`, `RUNNING`, `PAUSED`, `GAME_OVER`), implement `ExTetrisEngine` lifecycle methods (`start`, `pause`, `resume`, `toggle_pause`, `new_game`), wall-kick offsets `((0, 0), (0, -1), (0, 1), (0, -2), (0, 2))`, soft/hard drop scoring (`+1`/`+2`), level/speed progression, `get_render_composite()`, and Observer dispatch (`*` + named events).
+
+5. **What I Implemented:**
+   - [attempts/attempt_3_engine_and_distributions/engine.py](attempts/attempt_3_engine_and_distributions/engine.py): `GameState` and `ExTetrisEngine`.
+
+6. **What I Got (Did It Work?):**
+   Yes—`py_compile` and all 6 verification assertions passed with exit code `0`, confirming zero `tkinter` imports, exact FSM transitions, `(0, -2)` wall-kick recovery, `+1`/`+2` drop scoring, level `2` (`920 ms`) after 12 lines cleared, and `GAME_OVER` Observer events.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Supported both `register_callback(event, fn)` and `register_callback(fn)` (wildcard `"*"` listener) so renderers or telemetry hooks can subscribe globally or per-event cleanly. Also ensured `get_render_composite()` prioritizes `active (3)` over `ghost (2)` and `locked (1)` so overlapping spawn/landing cells render accurately.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Completely UI-independent core engine; deterministic tick/step API; Observer notifications; built-in wall-kicks and ghost projection.
+   - **Weaknesses:** Still needs `AbstractRenderer` implementations (`HeadlessRenderer`, `CLIRenderer`, optional `TkinterRenderer`) and a runnable `play.py` entrypoint (Prompt 3).
+
+---
+
+## INT-014 — [Attempt 3] `AbstractRenderer` (`Headless`, `CLI`, Optional `Tkinter`) & `play.py`
+- **Timestamp:** 2026-11-26 11:30 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Implement AbstractRenderer in attempts/attempt_3_engine_and_distributions/ with priority on HeadlessRenderer (frame capture/inspection for automated runs) and CLIRenderer (ANSI terminal rendering + cross-platform non-blocking input via termios/select on POSIX and msvcrt on Windows), plus an optional TkinterRenderer that degrades gracefully if Tk is unavailable. Add a runnable entrypoint (play.py) supporting --renderer headless|cli|tk and verify HeadlessRenderer and CLIRenderer rendering/frame output (plus optional Tk check).
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Implemented `AbstractRenderer`, `HeadlessRenderer`, `NonBlockingKeyReader`, `CLIRenderer`, optional `TkinterRenderer`, and `create_renderer()` in `attempts/attempt_3_engine_and_distributions/renderers.py`, plus `play.py` CLI runner supporting `--renderer headless|cli|tk`.
+
+   Observed verification output (`play.py --renderer headless --variant extended --seed 42 --steps 25` + renderer checks):
+   ```text
+   Captured 26 headless frames. Final score=0, state=RUNNING
+   1. HeadlessRenderer scripted simulation verified, frames captured: 6
+   2. CLIRenderer ANSI output, key controls, and non-TTY run verified.
+   3a. TkinterRenderer.is_available(): True
+   3b. Optional TkinterRenderer render & close verified.
+   3c. Graceful degradation verified when Tk absent: Tkinter is not available in this Python environment.
+   ```
+
+3. **What I Interpreted:**
+   To prove the engine is truly decoupled from UI toolkits, all rendering and input must live behind `AbstractRenderer`, with `HeadlessRenderer` and `CLIRenderer` as first-class targets and `TkinterRenderer` imported lazily so headless/no-display environments never crash.
+
+4. **What I Planned:**
+   Create `AbstractRenderer` with `attach/render/run/close`, `HeadlessRenderer` with frame/composite/snapshot capture and scripted actions, `CLIRenderer` with `termios`/`select` + `msvcrt` non-blocking key polling and ANSI frame formatting, lazy `TkinterRenderer` with `is_available()`, and `play.py` CLI runner.
+
+5. **What I Implemented:**
+   - [attempts/attempt_3_engine_and_distributions/renderers.py](attempts/attempt_3_engine_and_distributions/renderers.py)
+   - [attempts/attempt_3_engine_and_distributions/play.py](attempts/attempt_3_engine_and_distributions/play.py)
+
+6. **What I Got (Did It Work?):**
+   Yes—`play.py --renderer headless` captured 26 frames showing active, ghost, and locked extended pieces; `CLIRenderer` rendered ANSI frames and processed key controls in non-TTY streams; and `TkinterRenderer` both ran when Tk was available and raised a clean `RuntimeError` when Tk was mocked absent.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Guarded `termios`/`tty` `setcbreak()` behind `input_stream.isatty()` and wrapped `tk.Tk()` / `import tkinter` inside `TkinterRenderer` rather than module top level, ensuring automated test runners and piped streams work without `termios.error` or `ImportError`.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Clean pluggable renderer architecture; zero Tk dependency in core/CLI/headless flows; cross-platform non-blocking keyboard handling.
+   - **Weaknesses:** Needs a unified `test_attempt3.py` suite covering all engine/distribution/renderer edge cases together (Prompt 4) and lacks the designer-facing Builder/JSON/Notebook layer (Attempt 4).
+
+---
+
+## INT-015 — [Attempt 3] Unified `test_attempt3.py` Integration & Reproducibility Suite
+- **Timestamp:** 2026-11-26 11:32 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Write a comprehensive unittest suite (test_attempt3.py) in attempts/attempt_3_engine_and_distributions/ covering Board metrics, wall kicks, FSM transitions (READY -> RUNNING -> PAUSED -> RUNNING -> GAME_OVER), Observer event logs, seeded distribution reproducibility & combinators (filter, map, blend, +, >>, conditional), HeadlessRenderer, and CLIRenderer output. Run the full suite, fix any bugs or edge cases uncovered, and show exact test results.
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Created `attempts/attempt_3_engine_and_distributions/test_attempt3.py` and executed `py_compile`, `test_attempt3.py`, and `test_board_and_distributions.py`.
+
+   Observed output:
+   ```text
+   test_bounds_metrics_ghost_and_multiline_clear ... ok
+   test_seeded_reproducibility_and_bag_filtered (__main__.TestDistributionsAndCombinators.test_seeded_reproducibility_and_bag_filtered) ... ok
+   test_weighted_bag_markov_adaptive_and_combinators ... ok
+   test_fsm_lifecycle_and_observers ... ok
+   test_scoring_and_level_speed_floor ... ok
+   test_wall_kicks_left_right_and_disabled ... ok
+   test_headless_and_cli_renderers_and_play_cli ... ok
+   test_optional_tk_graceful_degradation ... ok
+
+   Ran 8 tests in 2.009s
+
+   OK
+   ...
+   Ran 7 tests in 1.440s
+
+   OK
+   ```
+
+3. **What I Interpreted:**
+   Attempt 3 needs an end-to-end test suite exercising the interactions between `Board`, `ShapeDistribution` combinators, `ExTetrisEngine`, `HeadlessRenderer`, `CLIRenderer`, `TkinterRenderer` fallback, and `play.main()` together.
+
+4. **What I Planned:**
+   Write `test_attempt3.py` covering all 4 subsystem areas (board heuristics/bounds, seeded distributions & composed combinators, FSM/wall-kicks/scoring/level-floor/observers, and renderers + CLI), then run both test modules together.
+
+5. **What I Implemented:**
+   - [attempts/attempt_3_engine_and_distributions/test_attempt3.py](attempts/attempt_3_engine_and_distributions/test_attempt3.py)
+
+6. **What I Got (Did It Work?):**
+   Yes—all 8 tests in `test_attempt3.py` (`2.009s`) and all 7 tests in `test_board_and_distributions.py` (`1.440s`) passed with exit code `0`.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Tested both obstacle-induced left wall kicks (`(0, -1)` when col 4 was blocked) and right-wall boundary kicks (`(0, -2)`), as well as composed `BagDistribution(...).filter(... ) >> ...` reproducibility and `100ms` minimum drop speed clamping at high line counts.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Full cross-module verification across 15 test cases with deterministic seeds and real CLI/renderer integration checks.
+   - **Weaknesses:** Still lacks Attempt 4's designer-facing Builder, JSON schema validation, save/load/resume persistence, and no-code Jupyter studio.
+
+---
+
+## INT-016 — [Attempt 3] Audit Remaining Gaps, Write Report, Commit & Tag
+- **Timestamp:** 2026-11-26 11:33 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Audit attempts/attempt_3_engine_and_distributions/ to summarize what Attempt 3 achieved and what designer-facing gaps remain for Attempt 4 (Fluent ExTetrisBuilder, JSON schema loader/validator, save/load/resume persistence, no-code ExTetris_Studio.ipynb, and invalid-configuration tests). Write attempts/attempt_3_engine_and_distributions/ATTEMPT_3_REPORT.md, update AI_INTERACTION_LOG.md, commit Attempt 3, tag it attempt-3-engine-and-distributions, and update attempts/README.md.
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Audited module line counts and Tkinter coupling across all 10 Python files in `attempts/attempt_3_engine_and_distributions/` (`2,278` total lines, `tkinter` absent from all core modules), wrote `ATTEMPT_3_REPORT.md`, logged `INT-016` in `AI_INTERACTION_LOG.md`, committed and tagged `attempt-3-engine-and-distributions`, and updated `attempts/README.md`.
+
+   Observed audit output:
+   ```text
+   board.py: lines=147, mentions_tkinter=False
+   distributions.py: lines=326, mentions_tkinter=False
+   engine.py: lines=362, mentions_tkinter=False
+   factory.py: lines=138, mentions_tkinter=False
+   hierarchy.py: lines=181, mentions_tkinter=False
+   play.py: lines=61, mentions_tkinter=False
+   renderers.py: lines=389, mentions_tkinter=True
+   shape.py: lines=221, mentions_tkinter=False
+   test_attempt3.py: lines=264, mentions_tkinter=True
+   test_board_and_distributions.py: lines=189, mentions_tkinter=False
+   Total Python lines: 2278
+   ```
+
+3. **What I Interpreted:**
+   With the decoupled engine, Functional-OO distributions, and multi-renderer layer verified (`15/15` tests), we need to document the boundary audit and remaining no-code designer gaps before freezing Attempt 3.
+
+4. **What I Planned:**
+   Inspect module coupling/line counts, write `ATTEMPT_3_REPORT.md` detailing achievements (`INT-012`..`INT-015`) and Attempt 4 gaps, commit and tag `attempt-3-engine-and-distributions`, and update `attempts/README.md`.
+
+5. **What I Implemented:**
+   - [attempts/attempt_3_engine_and_distributions/ATTEMPT_3_REPORT.md](attempts/attempt_3_engine_and_distributions/ATTEMPT_3_REPORT.md)
+   - Updated [AI_INTERACTION_LOG.md](AI_INTERACTION_LOG.md) and [attempts/README.md](attempts/README.md).
+
+6. **What I Got (Did It Work?):**
+   Yes—audit confirmed clean UI isolation (`tkinter` confined to `renderers.py` and its test), `ATTEMPT_3_REPORT.md` finalized, and Attempt 3 tagged in Git.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Checked `mentions_tkinter` across all 10 files in `attempt_3_engine_and_distributions/` to verify zero UI leakage back into core modules (`shape`, `hierarchy`, `factory`, `board`, `distributions`, `engine`, `play`).
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Complete, tested engine/distribution/renderer core ready for the no-code designer interface in Attempt 4.
+   - **Weaknesses:** Still requires Python code to configure variants until Attempt 4 adds `ExTetrisBuilder`, JSON schema validation, persistence, and `ExTetris_Studio.ipynb`.
