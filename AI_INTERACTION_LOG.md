@@ -20,6 +20,11 @@
 | `INT-004` | Attempt 1 | Decouple `mainloop()` / add `headless=True` & run gameplay smoke tests | All 5 headless gameplay smoke tests passed |
 | `INT-005` | Attempt 1 | Audit Attempt 1 against PDF Section 3.2 & target design | Quantified 71 vs 110 polyplets, 21 rotation-dup groups, and 4 structural gaps |
 | `INT-006` | Attempt 1 | Write `ATTEMPT_1_REPORT.md`, commit & tag `attempt-1-naive-oop` | Report written, logged, committed, and tagged |
+| `INT-007` | Attempt 2 | Design coordinate-based `Shape` & `ExTetromino` base classes | Normalized `(r, c)` geometry, rotations, & 4-rotation landing holes verified |
+| `INT-008` | Attempt 2 | Build algorithmic `ExTetrominoFactory` (110 4-polyplets) | Generated 110 fixed / 34 one-sided / 22 free / 7 classic (19 fixed) in ~0.012s |
+| `INT-009` | Attempt 2 | Implement bounding-box, morphology & landing-cavity subclasses | All 110 shapes verified across 11 boxes (incl. 3×4, 4×3), morphology & cavities |
+| `INT-010` | Attempt 2 | Integrate `Board`, `TetrisEngine`, & run `unittest` verification suite | 8/8 unit tests passed (`0.298s`) incl. headless gameplay & Tkinter smoke |
+| `INT-011` | Attempt 2 | Audit Attempt 2 gaps, write `ATTEMPT_2_REPORT.md`, commit & tag | Gaps documented; committed & tagged `attempt-2-shape-hierarchy` |
 
 ---
 
@@ -302,3 +307,217 @@
 8. **Strengths, Weaknesses & Trade-offs:**
    - **Strengths:** Reproducible, runnable v1 snapshot showing genuine progression from Attempt 0's crashes to a working naive OOP version, along with empirical reasons for Attempt 2.
    - **Weaknesses:** Intentionally leaves coordinate geometry, 110-polyplet synthesis, Functional-OO distributions, and UI decoupling to Attempts 2–3.
+
+---
+
+## INT-007 — [Attempt 2] Coordinate-Based `Shape` & `ExTetromino` Base Classes
+- **Timestamp:** 2026-11-26 11:11 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   In attempts/attempt_2_shape_hierarchy/, design the new coordinate-based Shape and ExTetromino base classes without initializing any shape from hard-coded matrices. Store pieces as normalized (r, c) coordinate sets anchored at (0, 0), support rotateCW(), rotateAntiCW(), fliplr(), flipud(), bounding_box(), to_matrix(), and landing_holes() (counting empty cells trapped directly beneath occupied cells in the current orientation and across all 4 rotations). Verify rotations and normalization on sample pieces.
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Implemented `attempts/attempt_2_shape_hierarchy/shape.py` with coordinate-only `Shape` and `ExTetromino` classes (`normalize_coords`, `is_connected`, `rotateCW`, `rotateAntiCW`, `fliplr`, `flipud`, `bounding_box`, `to_matrix`, `landing_holes`, `landing_hole_profile`, `is_orthogonal`, `is_diagonal`) and verified against `numpy.rot90` / `fliplr` / `flipud` plus invalid-piece checks.
+
+   Observed output:
+   ```text
+   1. Normalization anchored at (0, 0) verified: ((0, 0), (0, 1), (1, 1), (2, 2))
+   2. CW, AntiCW, 4xCW, fliplr, flipud, bounding_box, and to_matrix verified.
+   3. Landing holes & 4-rotation profiles verified: {'I': (0, 0, 0, 0), 'O': (0, 0, 0, 0), 'T': (2, 1, 0, 1), 'Diamond': (3, 3, 3, 3)}
+   4. Rejected invalid piece as expected: ExTetromino must have exactly 4 cells, got 3.
+   4. Rejected invalid piece as expected: ExTetromino cells must be 8-connected, got ((0, 0), (0, 2), (0, 3), (0, 4)).
+   ```
+
+3. **What I Interpreted:**
+   Eliminating stored matrices in favor of normalized `(r, c)` coordinate tuples satisfies PDF Section 3.2 and makes geometric queries (bounding box, rotation, connectivity, and landing cavities) direct and exact.
+
+4. **What I Planned:**
+   Create `Shape` (normalized `(r, c)` representation, affine grid rotations/reflections, on-demand `to_matrix()`, and `landing_holes()` / `landing_hole_profile()`) and `ExTetromino(Shape)` (enforcing 4 cells + 8-connectivity and providing 4-connectivity vs. diagonal morphology checks).
+
+5. **What I Implemented:**
+   - [attempts/attempt_2_shape_hierarchy/shape.py](attempts/attempt_2_shape_hierarchy/shape.py): `normalize_coords()`, `is_connected()`, `Shape`, and `ExTetromino`.
+
+6. **What I Got (Did It Work?):**
+   Yes—normalization from negative/shifted offsets, rotation/reflection parity against NumPy (`np.rot90`, `np.fliplr`, `np.flipud`), landing-hole profiles across 4 rotations, and validation rejections for invalid cell counts and disconnected pieces all passed with exit code `0`.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Unified overhangs above a flat floor and internal enclosed voids under a single column-scan invariant: within the bounding box `(h, w)`, an empty `(r, c)` is a landing hole iff an occupied `(r', c)` exists strictly above it (`r' < r`). Verified on `I`, `O`, `T`, `L`, diagonal diamond, and a `3×4` diagonal piece.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Zero hard-coded matrix storage; exact O(1)-cell coordinate transforms; unified landing-hole calculation across all 4 rotations; backward-compatible `matrix` property via `to_matrix()`.
+   - **Weaknesses:** Still needs the algorithmic 110-polyplet generator (`ExTetrominoFactory`) and the concrete bounding-box / morphology / landing-cavity subclass hierarchy (Prompts 2–3).
+
+---
+
+## INT-008 — [Attempt 2] Algorithmic `ExTetrominoFactory` (110 4-Polyplets & Classic Grouping)
+- **Timestamp:** 2026-11-26 11:17 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Build ExTetrominoFactory in attempts/attempt_2_shape_hierarchy/ to algorithmically generate all 110 unique normalized 8-connected 4-polyplets on a 4×4 grid from scratch (zero hard-coded boolean arrays). Also expose clean queries/groupings distinguishing the 7 classic one-sided tetrominoes (and their 19 fixed orientations) from the 34 one-sided and 110 fixed 4-polyplets. Verify total counts, 8-connectivity, normalization, and zero duplicate IDs
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Implemented `ExTetrominoFactory` in `attempts/attempt_2_shape_hierarchy/factory.py` using exhaustive 4-cell combinations on a `4×4` grid filtered by 8-connectivity and normalized to `(0, 0)`, exposing `all_fixed()`, `all_one_sided()`, `all_free()`, `classic_one_sided()`, `classic_fixed()`, `extended_one_sided()`, `extended_fixed()`, `by_id()`, `filter()`, and `summary()`.
+
+   Observed output:
+   ```text
+   ExTetrominoFactory summary: {'fixed_total': 110, 'one_sided_total': 34, 'free_total': 22, 'classic_one_sided': 7, 'classic_fixed': 19, 'diagonal_one_sided': 27, 'diagonal_fixed': 91, 'generation_time_sec': 0.011993}
+   1. All combinatorial counts verified: 110 fixed, 34 one-sided, 22 free, 7/19 classic, 27/91 diagonal.
+   2. Zero duplicate IDs and zero duplicate coordinate sets verified.
+   3. 8-connectivity and (0, 0) normalization verified on all 110 shapes.
+   4. Clone isolation and by_id() verified.
+   ```
+
+3. **What I Interpreted:**
+   Rather than storing or fixing the 71 starter matrices from Attempt 1, generating all 4-polyplets combinatorially from `(r, c)` coordinates guarantees completeness (110 fixed, 34 one-sided, 22 free) and lets us separate classic 4-connected tetrominoes (7 one-sided / 19 fixed) cleanly from diagonal polyplets (27 / 91).
+
+4. **What I Planned:**
+   Enumerate `C(16, 4)` subsets on a `4×4` grid, filter via `is_connected(..., diagonal=True)`, normalize via `normalize_coords()`, order deterministically into IDs `1..110`, return clones from all query methods, and include an `_instantiate_piece()` hook for Prompt 3's subclass hierarchy.
+
+5. **What I Implemented:**
+   - [attempts/attempt_2_shape_hierarchy/factory.py](attempts/attempt_2_shape_hierarchy/factory.py): `ExTetrominoFactory` with `all_fixed`, `all_one_sided`, `all_free`, `classic_one_sided`, `classic_fixed`, `extended_one_sided`, `extended_fixed`, `by_id`, `filter`, and `summary`.
+
+6. **What I Got (Did It Work?):**
+   Yes—all 110 fixed, 34 one-sided, 22 free, 7 classic one-sided, 19 classic fixed, 27 diagonal one-sided, and 91 diagonal fixed counts, normalization invariants, 8-connectivity, unique IDs `1..110`, and clone isolation passed in `0.011993` seconds.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Confirmed mathematically that 4-connected 4-polyominoes on a `4×4` grid yield exactly the 19 fixed orientations of the 7 classic tetrominoes (`I:2, O:1, L:4, J:4, T:4, S:2, Z:2`), allowing classic grouping directly by topological 4-connectivity without any hard-coded classic matrix list.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Zero hard-coded arrays; sub-15 ms generation; clean separation of fixed vs. one-sided vs. free and classic vs. diagonal groupings; clone-safe catalog.
+   - **Weaknesses:** Still instantiates plain `ExTetromino` until Prompt 3 hooks in the bounding-box, morphology, and landing-cavity subclasses.
+
+---
+
+## INT-009 — [Attempt 2] Multi-Axis Classification Hierarchy (`BoundingBox`, `Morphology`, `LandingCavity`)
+- **Timestamp:** 2026-11-26 11:18 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Extend attempts/attempt_2_shape_hierarchy/ with the full ExTetromino classification hierarchy: (1) bounding-box subclasses covering all valid 4-polyplet dimensions (1x4, 4x1, 2x2, 2x3, 3x2, 2x4, 4x2, 3x3, 3x4, 4x3, 4x4), (2) morphology classes (OrthogonalTetromino for 4-connected vs. DiagonalPolyplet for corner-connected), and (3) landing-cavity classes (FlatLandingShape, SingleCavityShape, MultiCavityShape based on landing hole profile). Have ExTetrominoFactory instantiate the exact matching subclass for every generated piece and verify all 110 shapes classify cleanly
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Implemented `attempts/attempt_2_shape_hierarchy/hierarchy.py` with cooperative multiple-inheritance subclasses across all three classification axes and updated `ExTetrominoFactory._instantiate_piece()` in `factory.py` to synthesize and instantiate the matching composite subclass for each of the 110 pieces.
+
+   Observed output:
+   ```text
+   1. All 110 pieces verified across all 3 classification axes:
+      Bounding boxes: [('Box1x4Shape', 1), ('Box2x2Shape', 1), ('Box2x3Shape', 12), ('Box2x4Shape', 14), ('Box3x2Shape', 12), ('Box3x3Shape', 33), ('Box3x4Shape', 10), ('Box4x1Shape', 1), ('Box4x2Shape', 14), ('Box4x3Shape', 10), ('Box4x4Shape', 2)]
+      Morphology: {'OrthogonalTetromino': 19, 'DiagonalPolyplet': 91}
+      Cavities: {'FlatLandingShape': 8, 'MultiCavityShape': 81, 'SingleCavityShape': 21}
+   2. Dynamic reclassification on rotation verified: Box1x4Shape -> Box4x1Shape.
+   3. Invariant check rejected mismatched subclass: Box3x4Shape requires bounding box (3, 4), got (2, 2)
+   ```
+
+3. **What I Interpreted:**
+   To avoid an explosion of 66 hand-written classes (`11 boxes × 2 morphologies × 3 cavities`), we can define the 3 clean axis hierarchies with invariant checks and combine them via cooperative MRO + cached composite subclasses, wired into `ExTetrominoFactory`.
+
+4. **What I Planned:**
+   Create `Box1x4Shape`..`Box4x4Shape` (explicitly including `Box3x4Shape`, `Box4x3Shape`, `Box4x1Shape`), `OrthogonalTetromino`/`DiagonalPolyplet`, `FlatLandingShape`/`SingleCavityShape`/`MultiCavityShape`, plus `classify_extetromino()`, and hook `ExTetrominoFactory._instantiate_piece()` to use it.
+
+5. **What I Implemented:**
+   - [attempts/attempt_2_shape_hierarchy/hierarchy.py](attempts/attempt_2_shape_hierarchy/hierarchy.py): all 11 bounding-box classes, 2 morphology classes, 3 landing-cavity classes, `get_composite_class()`, and `classify_extetromino()`.
+   - [attempts/attempt_2_shape_hierarchy/factory.py](attempts/attempt_2_shape_hierarchy/factory.py): hooked `_instantiate_piece()` to `classify_extetromino()`.
+
+6. **What I Got (Did It Work?):**
+   Yes—all 110 generated shapes classified cleanly across all 11 bounding boxes (`10` each in `Box3x4Shape` and `Box4x3Shape`), both morphologies (`19` orthogonal, `91` diagonal), and all 3 cavity categories (`8` flat, `21` single, `81` multi), with dynamic reclassification on rotation and invariant rejection on mismatched construction.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Noticed that rotating a classified piece in-place (e.g., `Box1x4Shape.rotateCW()`) changes its bounding box to `(4, 1)` and could break `self.__class__(self.coords)` inside `clone()`. Bound `clone` and `reclassify` on composite classes to `classify_extetromino()` so cloned/rotated instances always receive the up-to-date subclass.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Strict runtime invariant checks per axis, zero boilerplate class explosion, full `isinstance()` support on all 3 axes, and automatic reclassification after rotation.
+   - **Weaknesses:** Still needs `Board` and `TetrisEngine` integration in Attempt 2 (Prompt 4) to drive live gameplay with the new hierarchy.
+
+---
+
+## INT-010 — [Attempt 2] Integrate `Board` & `TetrisEngine` + Run Verification Suite
+- **Timestamp:** 2026-11-26 11:20 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Update Board and TetrisEngine in attempts/attempt_2_shape_hierarchy/ so the full game runs using the new coordinate-based Shape subclasses and ExTetrominoFactory (both headless=True tests and interactive python3 engine.py). Write and run verification tests covering all 110 generated shapes, bounding boxes (including 3x4 and 4x3), rotations, Board collision boundaries, line clearing, and game-over flow.
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Implemented coordinate-aware `Board` (`board.py`), updated `TetrisEngine` (`engine.py`) to draw from `ExTetrominoFactory` and reclassify pieces on rotation, and added `test_attempt2.py` covering shape generation, hierarchy, rotations, board boundaries, line clearing, headless gameplay, and Tkinter initialization.
+
+   Initial run failed 1 of 8 tests (`test_engine_headless_gameplay_and_gameover` in `0.803s`) because setting `board.area[0:2, :] = True` filled entire rows, which `clear_full_lines()` immediately cleared. Updating the test fixture to occupy only spawn columns `board.area[1:4, 3:8] = True` fixed the test, yielding:
+   ```text
+   Ran 8 tests in 0.298s
+
+   OK
+   ```
+
+3. **What I Interpreted:**
+   To prove the new coordinate-based hierarchy works end-to-end (not just in isolation), `Board` and `TetrisEngine` had to operate directly on `Shape.coords` and `ExTetrominoFactory` while supporting both headless automated tests and interactive Tkinter play.
+
+4. **What I Planned:**
+   Update `board.py` (`_extract_coords`, `clear_full_lines`, `clone`), rewrite `engine.py` to use `ExTetrominoFactory` and `reclassify()` on rotations, and create `test_attempt2.py` with 8 comprehensive `unittest` cases.
+
+5. **What I Implemented:**
+   - [attempts/attempt_2_shape_hierarchy/board.py](attempts/attempt_2_shape_hierarchy/board.py)
+   - [attempts/attempt_2_shape_hierarchy/engine.py](attempts/attempt_2_shape_hierarchy/engine.py)
+   - [attempts/attempt_2_shape_hierarchy/test_attempt2.py](attempts/attempt_2_shape_hierarchy/test_attempt2.py)
+
+6. **What I Got (Did It Work?):**
+   Yes—after fixing the game-over test fixture, all 8 `unittest` tests passed (`Ran 8 tests in 0.298s — OK`), including Tkinter window initialization/cleanup.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Diagnosed the initial `AssertionError` in `test_engine_headless_gameplay_and_gameover`: pre-filling entire rows `0:2` caused `move_down_step()` -> `clear_full_lines()` to evaporate the blocker rows before checking spawn collision. Restricting the obstacle to `area[1:4, 3:8]` simulated an authentic stacked tower blocking `(0, 4)` without triggering full-line erasure.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Completely matrix-free `Shape`/`ExTetrominoFactory`/`Board` pipeline; 110 shapes + all 11 bounding boxes verified; `engine.py` maintains exact piece subclass across rotations.
+   - **Weaknesses (motivating Attempt 3):** `TetrisEngine` still uses `self._rng.choice(self.piece_pool)` instead of Functional-OO distributions, still embeds Tkinter directly, lacks FSM/Observer architecture, lacks board metrics (`count_holes`, `get_max_height`, `get_bumpiness`), wall kicks, ghost piece, and CLI/Headless renderers.
+
+---
+
+## INT-011 — [Attempt 2] Audit Remaining Gaps, Write Report, Commit & Tag
+- **Timestamp:** 2026-11-26 11:22 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Audit attempts/attempt_2_shape_hierarchy/ to highlight what Attempt 2 solved and what architectural gaps remain for Attempt 3 (such as lack of Functional-OO distribution combinators, FSM/Observer engine decoupling, Headless/CLI renderers, wall kicks, and board heuristics). Then write attempts/attempt_2_shape_hierarchy/ATTEMPT_2_REPORT.md, update AI_INTERACTION_LOG.md, commit Attempt 2, tag it attempt-2-shape-hierarchy, and update attempts/README.md
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Audited line counts, imports (`tkinter` isolated to `engine.py` and GUI smoke test; zero `eval()` across all 6 files), and remaining architectural gaps; wrote `attempts/attempt_2_shape_hierarchy/ATTEMPT_2_REPORT.md`; logged `INT-011` in `AI_INTERACTION_LOG.md`; committed and tagged `attempt-2-shape-hierarchy`; and updated `attempts/README.md`.
+
+   Observed audit output:
+   ```text
+   board.py: lines=99, imports_tkinter=False, has_eval=False
+   engine.py: lines=266, imports_tkinter=True, has_eval=False
+   factory.py: lines=138, imports_tkinter=False, has_eval=False
+   hierarchy.py: lines=181, imports_tkinter=False, has_eval=False
+   shape.py: lines=221, imports_tkinter=False, has_eval=False
+   test_attempt2.py: lines=162, imports_tkinter=True, has_eval=False
+   ```
+
+3. **What I Interpreted:**
+   With the shape hierarchy and 110-polyplet factory verified, we need an explicit audit of what Attempt 2 resolved vs. what engine, distribution, renderer, and heuristic gaps motivate Attempt 3 before freezing the Attempt 2 snapshot.
+
+4. **What I Planned:**
+   Audit Attempt 2 modules for coupling and missing features, capture the synthesis in `ATTEMPT_2_REPORT.md`, commit and tag `attempt-2-shape-hierarchy`, and update `attempts/README.md`.
+
+5. **What I Implemented:**
+   - [attempts/attempt_2_shape_hierarchy/ATTEMPT_2_REPORT.md](attempts/attempt_2_shape_hierarchy/ATTEMPT_2_REPORT.md)
+   - Updated [AI_INTERACTION_LOG.md](AI_INTERACTION_LOG.md) and [attempts/README.md](attempts/README.md).
+
+6. **What I Got (Did It Work?):**
+   Yes—all 6 files audited cleanly, `ATTEMPT_2_REPORT.md` finalized, and the Attempt 2 snapshot is committed and tagged `attempt-2-shape-hierarchy`.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Verified module boundaries programmatically (`imports_tkinter` and `has_eval` checks) showing that `shape.py`, `hierarchy.py`, `factory.py`, and `board.py` are now 100% Tkinter-free, leaving UI coupling confined to `engine.py`.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Completely solves PDF Section 3.2's shape-hierarchy and no-matrix requirements with 8/8 passing tests.
+   - **Weaknesses:** Engine/distribution/renderer decoupling and non-programmer configuration remain for Attempts 3 and 4.
