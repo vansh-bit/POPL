@@ -284,7 +284,11 @@ class TkinterRenderer(AbstractRenderer):
     def is_available():
         try:
             import tkinter as tk
-            return tk is not None
+            probe = tk.Tk()
+            probe.withdraw()
+            probe.update_idletasks()
+            probe.destroy()
+            return True
         except Exception:
             return False
 

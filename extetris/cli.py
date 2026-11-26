@@ -12,13 +12,13 @@ from extetris.config import ConfigValidationError
 def _apply_variant_preset(builder, variant):
     key = variant.strip().lower()
     if key == "classic":
-        builder.use_classic_tetris().with_distribution("bag")
+        builder.use_classic_tetris().with_board_size(10, 20).with_speed(1000, 0.92).with_distribution("bag")
     elif key == "extended":
-        builder.use_extended_tetris().with_distribution("adaptive").with_board_size(12, 22)
+        builder.use_extended_tetris().filter_max_holes(4).with_board_size(12, 22).with_speed(850, 0.92).with_distribution("adaptive")
     elif key == "chaos":
-        builder.use_chaos_tetris().with_distribution("markov").with_board_size(14, 24)
+        builder.use_chaos_tetris().with_board_size(14, 24).with_speed(700, 0.90).with_distribution("markov", repeat_penalty=0.05)
     elif key == "custom":
-        builder.use_extended_tetris().filter_diagonal_only().filter_max_holes(2).with_distribution("bag")
+        builder.use_extended_tetris().filter_diagonal_only().filter_max_holes(2).with_board_size(10, 20).with_speed(1100, 0.94).with_distribution("bag", seed=42).with_renderer("headless")
 
 
 def main(argv=None):

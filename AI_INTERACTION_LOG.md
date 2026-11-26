@@ -40,6 +40,7 @@
 | `INT-024` | Attempt 5 | Add clean-venv packaging test (`tests/test_packaging/`) & run full suite | 23/23 tests passed (`38.86s`) incl. isolated venv install, CLI & config check |
 | `INT-025` | Attempt 5 | Author `docs/{DESIGN,UML,API,GAME_PROGRAMMERS_MANUAL}.md` & `README.md` | Complete technical, UML, API, and non-programmer docs + verified CLI `--export` |
 | `INT-026` | Attempt 5 | Write `docs/AI_USAGE_REPORT.md`, package ZIP, test, commit & tag | Master report written, ZIP rebuilt, full test suite verified & tagged `attempt-5-final` |
+| `INT-027` | Attempt 5 | Final audit & Section 6 fixes (Tk display, `setup.sh`, offline packaging test) | Fixed display probe, dependency install, offline skip, & CLI presets |
 
 ---
 
@@ -1208,3 +1209,44 @@
 8. **Strengths, Weaknesses & Trade-offs:**
    - **Strengths:** Complete, reproducible, cleanly packaged submission preserving every historical attempt alongside full technical, API, UML, and non-programmer manuals.
    - **Weaknesses:** Requires internet or cached PyPI wheels during `test_submission_package.py` if run in a strictly offline environment without local wheel cache.
+
+---
+
+## INT-027 — [Attempt 5] Final Specification Audit & Portability Fixes
+- **Timestamp:** 2026-11-26 12:47 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Final Improvement Prompt — ExTetris PoPL Assignment (Section 6 audit: Tkinter display availability assumption, offline packaging test behavior, setup.sh --no-deps dependency issue, and full cross-check against PoPL2026AssignmentExTetris.pdf)
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Audited the codebase, scripts, tests, and documentation against `PoPL2026AssignmentExTetris.pdf`. Fixed three genuine portability/testing bugs (`TkinterRenderer.is_available()` display check + `skipTest`, `setup.sh` removing default `--no-deps`, and offline skip handling in `test_submission_package.py`), synced `extetris/cli.py` preset defaults with `configs/*.json`, added `test_tk_is_available_returns_false_without_display`, rebuilt the submission ZIP, and re-verified the full test suite (including offline simulation).
+
+3. **What I Interpreted:**
+   Even when all tests pass on a networked macOS workstation with a display server, a grader running in headless Linux/WSL or an offline sandbox would hit failures if `TkinterRenderer.is_available()` ignores `$DISPLAY`, `setup.sh` skips `numpy` with `--no-deps`, or `test_submission_package.py` treats offline PyPI errors as packaging bugs.
+
+4. **What I Planned:**
+   Fix only those concrete bugs within the existing assignment scope—without altering preserved historical attempts or adding extra features—and verify both online and simulated-offline test runs.
+
+5. **What I Implemented:**
+   - [extetris/renderers/renderers.py](extetris/renderers/renderers.py): `TkinterRenderer.is_available()` now probes `tk.Tk()` and destroys it cleanly.
+   - [tests/test_integration/test_integration.py](tests/test_integration/test_integration.py): `test_optional_tk_renderer` skips via `self.skipTest(...)` when display is unavailable; added `test_tk_is_available_returns_false_without_display`.
+   - [setup.sh](setup.sh): removed `--no-deps` from default `pip install -e .` and added explicit `--offline` flag.
+   - [tests/test_packaging/test_submission_package.py](tests/test_packaging/test_submission_package.py): added clean `self.skipTest(...)` detection on network/offline pip failures.
+   - [extetris/cli.py](extetris/cli.py): synced `_apply_variant_preset` defaults with `configs/*.json`.
+   - [docs/AI_USAGE_REPORT.md](docs/AI_USAGE_REPORT.md): documented `INT-027` post-audit fixes.
+
+6. **What I Got (Did It Work?):**
+   Yes—verified in both online and simulated-offline modes:
+   - Simulated offline packaging test (`HTTPS_PROXY=http://127.0.0.1:9`): `1 skipped in 12.20s` (cleanly skips after building and extracting the ZIP when isolated `pip install` cannot reach PyPI).
+   - Full suite (`./test.sh`): `24 passed in 18.71s` across all 9 test categories (including `test_tk_is_available_returns_false_without_display` and `test_clean_venv_install_tests_cli_and_config`).
+   - Rebuilt submission ZIP (`make package`): `dist/extetris_submission.zip` (`124 files, 229658 bytes`).
+
+7. **How I Got It (Modifications & Independent Research):**
+   Confirmed via `setup.sh` inspection that `--no-deps` would leave a fresh `.venv` without `numpy`, and confirmed via `renderers.py` inspection that `import tkinter` succeeds even when `$DISPLAY` is missing on POSIX headless systems.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Accurately distinguishes `PASSED`, `FAILED`, and `SKIPPED` across headless and offline environments without masking real packaging defects.
+   - **Weaknesses:** In an offline sandbox without cached wheels, `test_submission_package.py` skips the isolated venv install step after verifying ZIP creation and extraction.

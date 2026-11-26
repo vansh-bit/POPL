@@ -33,11 +33,19 @@ class TestIntegrationWorkflows(unittest.TestCase):
         self.assertIn("Captured 7 headless frames", stdout_cap.getvalue())
 
     def test_optional_tk_renderer(self):
-        if TkinterRenderer.is_available():
-            tk_r = TkinterRenderer()
-            eng, _ = load_game_from_json(ROOT / "configs" / "classic.json")
-            tk_r.render(eng)
-            tk_r.close()
+        if not TkinterRenderer.is_available():
+            self.skipTest("Tkinter or graphical display unavailable")
+        tk_r = TkinterRenderer()
+        eng, _ = load_game_from_json(ROOT / "configs" / "classic.json")
+        tk_r.render(eng)
+        tk_r.close()
+
+    def test_tk_is_available_returns_false_without_display(self):
+        import tkinter as tk
+        from unittest import mock
+
+        with mock.patch.object(tk, "Tk", side_effect=tk.TclError("no display name")):
+            self.assertFalse(TkinterRenderer.is_available())
 
     def test_notebook_workflow_executes_cleanly(self):
         nb_path = ROOT / "ExTetris_Studio.ipynb"

@@ -2,7 +2,7 @@
 
 - **Project:** Extended Tetris (ExTetris) — CS F301 PoPL, Sem-I, 2026-27
 - **Primary AI Assistant Used:** Antigravity (Gemini 4 Hydrogen High / Gemini 3.8 Flash High)
-- **Complete Verbatim Log:** [../AI_INTERACTION_LOG.md](../AI_INTERACTION_LOG.md) (`INT-001` through `INT-026`)
+- **Complete Verbatim Log:** [../AI_INTERACTION_LOG.md](../AI_INTERACTION_LOG.md) (`INT-001` through `INT-027`)
 - **Preserved Historical Snapshots:** [../attempts/README.md](../attempts/README.md) (`attempt-0-baseline` through `attempt-5-final`)
 
 ---
@@ -51,6 +51,7 @@ Rather than jumping straight to a finished codebase or discarding flawed drafts,
 ### Attempt 5 — Modular Package, Automation, Clean-Venv Verification & Final Docs (`attempt-5-final`, `INT-022`–`INT-026`)
 - **Location:** Repository root (`extetris/`, `configs/`, `tests/`, `docs/`, `ExTetris_Studio.ipynb`, `Makefile`, `setup.sh`, `run.sh`, `test.sh`, `pyproject.toml`, `LICENSE`)
 - **What Changed:** Promoted Attempt 4 into the installable `extetris` package, added root build/run/test scripts, extracted `extetris/packaging.py` after Make's backslash line-continuation caused an inline `python3 -c` `SyntaxError`, added `tests/test_packaging/test_submission_package.py` to verify `dist/extetris_submission.zip` in an isolated virtual environment, and authored the complete `docs/` suite (`DESIGN.md`, `UML.md`, `API.md`, `GAME_PROGRAMMERS_MANUAL.md`, and this report).
+- **Post-Audit Fixes (`INT-027`):** Caught and fixed three portability/testing issues during final audit: (1) `TkinterRenderer.is_available()` now probes opening a `Tk()` window so headless systems return `False` and `test_optional_tk_renderer` reports `SKIPPED` instead of failing; (2) `setup.sh` now runs `pip install -e .` (reserving `--no-deps` for explicit `--offline` mode) so dependencies like `numpy` install cleanly in a fresh `.venv`; and (3) `test_submission_package.py` skips cleanly when `pip` cannot reach PyPI in an offline environment while still failing on genuine packaging errors. Synced `extetris/cli.py` preset defaults with `configs/*.json`.
 
 ---
 
