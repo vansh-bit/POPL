@@ -35,6 +35,11 @@
 | `INT-019` | Attempt 4 | Build & execute `ExTetris_Studio.ipynb` + `play.py` launcher | All 6 code cells executed cleanly via `nbconvert`; `play.py --config` verified |
 | `INT-020` | Attempt 4 | Build & run categorized `tests/` suite (all 9 functional areas) | Fixed 1 rotation test fixture; 22/22 tests passed (`6.638s`) |
 | `INT-021` | Attempt 4 | Audit Attempt 4, write `ATTEMPT_4_REPORT.md`, commit & tag | Audited (`4,924` lines); committed & tagged `attempt-4-designer-and-tests` |
+| `INT-022` | Attempt 5 | Promote `extetris/` package, root `configs/`, & root `ExTetris_Studio.ipynb` | Editable install, `extetris` CLI, `python3 -m extetris.cli`, & notebook verified |
+| `INT-023` | Attempt 5 | Add `Makefile`, `setup.sh`, `run.sh`, `test.sh`, root `tests/`, & `make package` | 22/22 root tests (`8.64s`), `extetris/packaging.py`, & 123-file ZIP verified |
+| `INT-024` | Attempt 5 | Add clean-venv packaging test (`tests/test_packaging/`) & run full suite | 23/23 tests passed (`38.86s`) incl. isolated venv install, CLI & config check |
+| `INT-025` | Attempt 5 | Author `docs/{DESIGN,UML,API,GAME_PROGRAMMERS_MANUAL}.md` & `README.md` | Complete technical, UML, API, and non-programmer docs + verified CLI `--export` |
+| `INT-026` | Attempt 5 | Write `docs/AI_USAGE_REPORT.md`, package ZIP, test, commit & tag | Master report written, ZIP rebuilt, full test suite verified & tagged `attempt-5-final` |
 
 ---
 
@@ -1000,3 +1005,206 @@
 8. **Strengths, Weaknesses & Trade-offs:**
    - **Strengths:** End-to-end designer workflow (`JSON` + `ExTetrisBuilder` + `ExTetris_Studio.ipynb` + `save/load/resume` + `22/22` tests) works self-contained inside `attempts/attempt_4_designer_and_tests/`.
    - **Weaknesses:** Needs final package promotion to root `extetris/`, `Makefile`/shell scripts, clean-venv packaging test, and final `docs/` in Attempt 5.
+
+---
+
+## INT-022 — [Attempt 5] Promote Modular `extetris/` Package, Root `configs/`, and Root `ExTetris_Studio.ipynb`
+- **Timestamp:** 2026-11-26 11:52 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Promote the verified Attempt 4 codebase into the clean modular package at the repository root: extetris/ (shapes/, board/, distributions/, engine/, renderers/, config/, builder.py, cli.py), root configs/ (classic.json, extended.json, chaos.json, custom.json), and root ExTetris_Studio.ipynb (updated to import from extetris directly). Verify pip install -e . (or python3 -m extetris.cli), pyproject.toml entrypoint extetris, and execute the root ExTetris_Studio.ipynb cleanly.
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Promoted Attempt 4 into the modular root `extetris/` package (`shapes/`, `board/`, `distributions/`, `engine/`, `renderers/`, `config/`, `builder.py`, `cli.py`), populated root `configs/*.json`, created and executed root `ExTetris_Studio.ipynb`, installed editable package via `pip`, and verified both `extetris` entrypoint and `python3 -m extetris.cli`.
+
+   Observed verification output:
+   ```text
+   [NbConvertApp] Writing 50770 bytes to ExTetris_Studio.ipynb
+   Successfully built extetris
+   Installing collected packages: extetris
+   Successfully installed extetris-0.1.0
+   extetris --config configs/custom.json --steps 8 -> Captured 9 headless frames. Final score=0, state=RUNNING
+   python3 -m extetris.cli --variant extended --renderer headless --seed 42 --steps 8 -> Captured 9 headless frames. Final score=0, state=RUNNING
+   ```
+
+3. **What I Interpreted:**
+   To ship Attempt 5 as a clean, installable Python package matching `pyproject.toml`, Attempt 4's modules had to be refactored into modular subpackages (`extetris.shapes`, `extetris.board`, `extetris.distributions`, `extetris.engine`, `extetris.renderers`, `extetris.config`) with proper relative/package imports and a console entrypoint.
+
+4. **What I Planned:**
+   Organize `extetris/` subpackages and `__init__.py` re-exports, add `extetris/cli.py`, copy the 4 JSON presets into `configs/`, update `ExTetris_Studio.ipynb` to import directly from `extetris`, run `nbconvert --execute`, run `pip install --no-build-isolation --no-deps -e .`, and test both CLI invocations.
+
+5. **What I Implemented:**
+   - `extetris/__init__.py`, `shapes/{__init__.py,base.py,hierarchy.py,factory.py}`, `board/{__init__.py,board.py}`, `distributions/{__init__.py,distributions.py}`, `engine/{__init__.py,engine.py,persistence.py}`, `renderers/{__init__.py,renderers.py}`, `config/{__init__.py,schema.json,validator.py,loader.py}`, `builder.py`, `cli.py`
+   - `configs/{classic,extended,chaos,custom}.json`
+   - `ExTetris_Studio.ipynb`
+
+6. **What I Got (Did It Work?):**
+   Yes—`ExTetris_Studio.ipynb` executed cleanly (`50,770` bytes), `extetris-0.1.0` installed cleanly via `pyproject.toml`, and both `extetris` and `python3 -m extetris.cli` ran headless simulations cleanly.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Updated `ExTetrisBuilder.export_variant()` so the generated `run_variant.py` tries `from extetris import load_game_from_json` first (for clean venv installs) and falls back to adding `REPO_ROOT` to `sys.path` when launched uninstalled from a source checkout.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Clean installable Python package layout, console entrypoint, single source of truth across CLI, Builder, and Notebook.
+   - **Strengths:** Clean installable Python package layout, console entrypoint, single source of truth across CLI, Builder, and Notebook.
+   - **Weaknesses:** Still needs root `Makefile`/shell scripts, root `tests/`, clean-venv packaging test (`tests/test_packaging/`), and final `docs/` (Prompts 2–5).
+
+---
+
+## INT-023 — [Attempt 5] Build Automation, Root Tests & Submission ZIP Packaging
+- **Timestamp:** 2026-11-26 11:57 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Create Makefile (targets: setup, run, run-classic, run-extended, run-chaos, run-gui, test, package, clean), setup.sh, run.sh, and test.sh at the repository root, and promote all 8 categorized test suites into root tests/ using the extetris package. Ensure make package builds dist/extetris_submission.zip containing the package, configs/, tests/, ExTetris_Studio.ipynb, docs/, attempts/, AI_INTERACTION_LOG.md, scripts, LICENSE, README.md, and pyproject.toml (excluding .git/, .venv/, __pycache__/, dist/, and private drafts). Run test.sh and make package and verify.
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Created `Makefile`, `setup.sh`, `run.sh`, `test.sh`, `extetris/packaging.py`, and promoted all 8 categorized test modules to root `tests/` importing directly from `extetris`.
+
+   During initial `make package`, an inline `python3 -c` snippet with `\` line continuations raised `SyntaxError` because Make collapses continued lines onto one line. Extracted the packager cleanly into `extetris/packaging.py` (`python3 -m extetris.packaging`), after which verification passed:
+   ```text
+   ./test.sh -> 22 passed in 8.64s
+   make package -> Created .../dist/extetris_submission.zip (123 files, 207402 bytes)
+   ZIP entries count: 123
+   All required entries verified and all excluded paths absent.
+   ./run.sh --config configs/custom.json --steps 5 -> Captured 6 headless frames. Final score=0, state=RUNNING
+   ```
+
+3. **What I Interpreted:**
+   To satisfy PDF Section 3's build/run script requirement and clean packaging, root automation (`Makefile`, `setup.sh`, `run.sh`, `test.sh`) must work cross-platform and exclude transient caches, `.git`, `.venv`, `dist`, and private draft files from `extetris_submission.zip`.
+
+4. **What I Planned:**
+   Write `Makefile` with all 9 targets, executable shell wrappers (`setup.sh`, `run.sh`, `test.sh`), `extetris/packaging.py` for clean ZIP generation, and promote all 8 test suites under `tests/test_*/` to test the installed `extetris` package.
+
+5. **What I Implemented:**
+   - [Makefile](Makefile), [setup.sh](setup.sh), [run.sh](run.sh), [test.sh](test.sh)
+   - [extetris/packaging.py](extetris/packaging.py)
+   - Root test modules under `tests/test_shapes/`, `test_board/`, `test_rotations/`, `test_distributions/`, `test_engine/`, `test_configuration/`, `test_persistence/`, `test_integration/`.
+
+6. **What I Got (Did It Work?):**
+   Yes—`./test.sh` passed **22/22 tests in `8.64s`**, `make package` generated a clean **123-file** `dist/extetris_submission.zip` (`207,402` bytes) with zero excluded paths, and `./run.sh` launched the configured variant cleanly.
+
+7. **How I Got It (Modifications & Independent Research):**
+   - Replaced the inline Make `python3 -c` block with `extetris/packaging.py` (`$(PYTHON) -m extetris.packaging`) after Make's backslash line-continuation turned multi-line Python blocks into a `SyntaxError`.
+   - Guarded `test_notebook_workflow_executes_cleanly` with `importlib.util.find_spec("nbconvert")` so minimal virtual environments without Jupyter skip only the optional notebook execution check while full dev environments run it.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Portable Python-based ZIP packaging, single-command `make` targets, clean root test suite.
+   - **Weaknesses:** Still needs `tests/test_packaging/` clean-venv verification (Prompt 3) and complete `docs/` (Prompts 4–5).
+
+---
+
+## INT-024 — [Attempt 5] Clean-Environment Packaging Verification (`tests/test_packaging/`)
+- **Timestamp:** 2026-11-26 11:59 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Implement tests/test_packaging/test_submission_package.py to verify the release from a clean environment: (1) build dist/extetris_submission.zip, (2) extract it into a temporary directory, (3) create a clean virtual environment (python3 -m venv) and pip install the extracted project, (4) run the full unit/integration test suite inside the clean venv (skipping recursive packaging), (5) launch a basic game variant via the installed extetris CLI, and (6) load and validate a JSON configuration from configs/. Run the complete root pytest / unittest suite including test_packaging/ and report exact counts and runtimes
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Implemented `tests/test_packaging/test_submission_package.py` covering all 6 clean-environment release verification steps and executed `./test.sh` (`pytest tests -v`).
+
+   Observed output:
+   ```text
+   tests/test_packaging/test_submission_package.py::TestSubmissionPackage::test_clean_venv_install_tests_cli_and_config PASSED [ 65%]
+   ...
+   ============================= 23 passed in 38.86s ==============================
+   ```
+
+3. **What I Interpreted:**
+   To prove the packaged ZIP works independently of our local development setup (not just via editable installs or `PYTHONPATH`), we must test building the ZIP, extracting it, installing into a fresh `python3 -m venv` with `PYTHONPATH` stripped, running the tests, invoking the installed `extetris` binary, and validating JSON configs from outside the extracted tree.
+
+4. **What I Planned:**
+   Write `TestSubmissionPackage.test_clean_venv_install_tests_cli_and_config` guarding against recursion via `EXTETRIS_SKIP_PACKAGING_TEST=1`, stripping `PYTHONPATH`/`PYTHONHOME`/`VIRTUAL_ENV`, running `pip install`, `unittest discover`, `extetris --config configs/custom.json --steps 6`, and `extetris.load_config(...)` asserting `extetris.__file__` resolves inside the temp venv.
+
+5. **What I Implemented:**
+   - [tests/test_packaging/test_submission_package.py](tests/test_packaging/test_submission_package.py)
+
+6. **What I Got (Did It Work?):**
+   Yes—all **23 tests passed in `38.86s`** on the first run (`./test.sh`), proving the packaged submission installs and runs cleanly in an isolated virtual environment.
+
+7. **How I Got It (Modifications & Independent Research):**
+   Verified via `extetris.__file__` path assertion from `cwd=tmp_path` (outside `extract_dir`) that Python truly imported `extetris` from the fresh venv's `site-packages` rather than the working directory.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Genuine end-to-end release validation from archive build through isolated venv execution.
+   - **Weaknesses:** Still needs the complete `docs/` suite (`DESIGN.md`, `UML.md`, `API.md`, `GAME_PROGRAMMERS_MANUAL.md`, `AI_USAGE_REPORT.md`) and final `attempt-5-final` tag (Prompts 4–5).
+
+---
+
+## INT-025 — [Attempt 5] Technical Design, UML, API & Game Programmer's Manual
+- **Timestamp:** 2026-11-26 12:01 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Author the complete technical and designer documentation under docs/ aligned strictly with the actual extetris/ implementation: (1) docs/DESIGN.md (architecture, division of labour, entity-relationships, and design decisions), (2) docs/UML.md (Mermaid class diagram, 4-state FSM diagram, and gameplay/distribution sequence diagram), (3) docs/API.md (Application Programmer's Manual covering all public classes and methods), and (4) docs/GAME_PROGRAMMERS_MANUAL.md (non-technical step-by-step guide for designing and releasing ExTetris variants via JSON, ExTetris_Studio.ipynb, and export_variant without programming expertise). Update root README.md with clear quickstart and doc links.
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Authored `docs/DESIGN.md`, `docs/UML.md`, `docs/API.md`, `docs/GAME_PROGRAMMERS_MANUAL.md`, and updated root `README.md` strictly matching the verified `extetris/` codebase, and verified the documented `./run.sh --config configs/custom.json --export ...` workflow end-to-end.
+
+3. **What I Interpreted:**
+   Section 3.1 stresses documentation as the most important part, requiring both technical artifacts (Design + UML + API Reference) and an accessible Game Programmer's Manual for non-coders.
+
+4. **What I Planned:**
+   Write `DESIGN.md` (6-layer division of labour & architectural decisions), `UML.md` (Mermaid class, state, and sequence diagrams), `API.md` (all public exports across `extetris.*`), `GAME_PROGRAMMERS_MANUAL.md` (presets, Jupyter Studio, JSON editing, variant export), and update `README.md`.
+
+5. **What I Implemented:**
+   - [docs/DESIGN.md](docs/DESIGN.md)
+   - [docs/UML.md](docs/UML.md)
+   - [docs/API.md](docs/API.md)
+   - [docs/GAME_PROGRAMMERS_MANUAL.md](docs/GAME_PROGRAMMERS_MANUAL.md)
+   - [README.md](README.md)
+
+6. **What I Got (Did It Work?):**
+   Yes—all four documentation files and `README.md` match the actual codebase symbols and counts, and the documented CLI `--export` + `run_variant.py` workflow ran cleanly (`exit code 0`).
+
+7. **How I Got It (Modifications & Independent Research):**
+   Cross-checked every documented symbol, config key, bounding-box class (`Box1x4Shape`..`Box4x4Shape` including `Box3x4Shape` and `Box4x3Shape`), and CLI flag directly against `extetris/` source files and verified the `--export` command in `/tmp`.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Complete separation of audience-specific documentation (architecture/UML/API for developers vs. plain manual for game designers).
+   - **Weaknesses:** Still needs `docs/AI_USAGE_REPORT.md` synthesis, final ZIP rebuild, final test run, and `attempt-5-final` tag (Prompt 5).
+
+---
+
+## INT-026 — [Attempt 5] Final `AI_USAGE_REPORT.md`, Packaging, Test Run & Tag `attempt-5-final`
+- **Timestamp:** 2026-11-26 12:03 IST
+- **Tool / Model:** Antigravity — Gemini 4 Hydrogen (High)
+
+1. **Prompt Given (Verbatim):**
+   ```text
+   Write docs/AI_USAGE_REPORT.md synthesizing the full Continued Development Report across Attempts 0–5, referencing exact INT-001..INT-xxx IDs in AI_INTERACTION_LOG.md, summarizing every earlier attempt (including real bugs caught and fixed), and providing a candid effort comparison (actual effort with AI vs. estimated effort without AI). Re-build dist/extetris_submission.zip, re-run the full test suite including test_packaging/, commit Attempt 5 to Git, tag attempt-5-final, and update attempts/README.md.
+   ```
+
+2. **AI Assistant's Response (Verbatim Execution Summary & Observed Output):**
+   Authored `docs/AI_USAGE_REPORT.md` synthesizing Attempts 0–5 with exact `INT-001`..`INT-026` references and effort comparison, rebuilt `dist/extetris_submission.zip`, ran `./test.sh` (all 23 tests including `tests/test_packaging/`), updated `attempts/README.md`, committed Attempt 5, and tagged `attempt-5-final`.
+
+3. **What I Interpreted:**
+   This final step brings together the master Continued Development Report (Section 2.2), verifies the complete deliverable bundle from a clean environment after all documentation edits, and freezes Attempt 5 in Git as `attempt-5-final`.
+
+4. **What I Planned:**
+   Write `docs/AI_USAGE_REPORT.md`, log `INT-026`, rebuild `dist/extetris_submission.zip` via `make package`, run `./test.sh` (`23` tests including `test_packaging/`), commit to Git, tag `attempt-5-final`, and record the final commit hash in `attempts/README.md`.
+
+5. **What I Implemented:**
+   - [docs/AI_USAGE_REPORT.md](docs/AI_USAGE_REPORT.md)
+   - Updated [AI_INTERACTION_LOG.md](AI_INTERACTION_LOG.md) and [attempts/README.md](attempts/README.md)
+   - Rebuilt `dist/extetris_submission.zip`
+
+6. **What I Got (Did It Work?):**
+   Yes—`make package` produced `dist/extetris_submission.zip` (`124 files, 227708 bytes`) and `./test.sh` passed **23 passed in `24.70s`** (including clean-venv `test_submission_package.py` and live `nbconvert` notebook execution).
+
+7. **How I Got It (Modifications & Independent Research):**
+   Confirmed all interaction IDs (`INT-001`..`INT-026`), Git commit hashes/tags (`attempt-0-baseline`..`attempt-4-designer-and-tests`), and observed timings in `AI_USAGE_REPORT.md` match the actual recorded tool outputs.
+
+8. **Strengths, Weaknesses & Trade-offs:**
+   - **Strengths:** Complete, reproducible, cleanly packaged submission preserving every historical attempt alongside full technical, API, UML, and non-programmer manuals.
+   - **Weaknesses:** Requires internet or cached PyPI wheels during `test_submission_package.py` if run in a strictly offline environment without local wheel cache.
