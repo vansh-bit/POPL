@@ -2,8 +2,8 @@
 
 This directory preserves every earlier runnable attempt of the ExTetris assignment so that no intermediate or less-successful design is discarded.
 
-> **Important Note on Attempt 5:**  
-> The final verified release (**Attempt 5**) lives directly in the repository root (`extetris/`, `configs/`, `tests/`, `docs/`, `ExTetris_Studio.ipynb`, `Makefile`, `pyproject.toml`) rather than duplicated inside `attempts/`. When verified, it is tagged in Git as `attempt-5-final`.
+> **Important Note on Attempt 5 & Git Metadata:**  
+> The final verified release (**Attempt 5**) lives directly in the repository root (`extetris/`, `configs/`, `tests/`, `docs/`, `ExTetris_Studio.ipynb`, `Makefile`, `pyproject.toml`) rather than duplicated inside `attempts/`. Commit hashes and tags listed below refer to the **local development Git repository** (no remote repository URL is configured). Submission ZIP archives omit `.git/` metadata by design while preserving every runnable historical snapshot (Attempts 0–4) directly on disk inside `attempts/`.
 
 ## Attempt Progression & Git Mapping
 

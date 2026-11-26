@@ -2,13 +2,20 @@
 
 - **Project:** Extended Tetris (ExTetris) — CS F301 PoPL, Sem-I, 2026-27
 - **Primary AI Assistant Used:** Antigravity (Gemini 4 Hydrogen High / Gemini 3.8 Flash High)
-- **Complete Verbatim Log:** [../AI_INTERACTION_LOG.md](../AI_INTERACTION_LOG.md) (`INT-001` through `INT-027`)
+- **Complete Verbatim Log:** [../AI_INTERACTION_LOG.md](../AI_INTERACTION_LOG.md) (`INT-001` through `INT-027` — verbatim prompts & verbatim AI responses separated from terminal outputs)
 - **Preserved Historical Snapshots:** [../attempts/README.md](../attempts/README.md) (`attempt-0-baseline` through `attempt-5-final`)
 
 ---
 
 ## 1. Development Methodology & Preservation of All Attempts
-Rather than jumping straight to a finished codebase or discarding flawed drafts, ExTetris was developed across **six progressive, runnable snapshots (Attempts 0–5)**. Every earlier attempt is preserved in `attempts/` and tagged in Git, and every prompt, response summary, observed failure, manual diagnosis, and architectural trade-off is recorded chronologically in [../AI_INTERACTION_LOG.md](../AI_INTERACTION_LOG.md).
+Rather than jumping straight to a finished codebase or discarding flawed drafts, ExTetris was developed across **six progressive, runnable snapshots (Attempts 0–5)**. Every earlier attempt is preserved on disk in `attempts/` (`attempt_0_appendix_baseline/` through `attempt_4_designer_and_tests/`), and every prompt, verbatim AI response, observed failure, manual diagnosis, and architectural trade-off is recorded chronologically in [../AI_INTERACTION_LOG.md](../AI_INTERACTION_LOG.md).
+
+> **Note on Git References vs. Submission ZIP:**  
+> Commit hashes (`846e81b`, `9e2cfc7`, `31ed371`, `c091859`, `c18c89a`, `fa26c1f`) and tags (`attempt-0-baseline`..`attempt-5-final`) come from the **local Git repository** used during development (no remote repository URL is configured). The submission ZIP omits `.git/` metadata by design to stay lightweight and reproducible, while preserving all historical Attempt 0–4 source trees and reports independently on disk under `attempts/`.
+
+### Installation Modes (Online vs. Offline)
+- **Normal installation** (`./setup.sh`, `make setup`, or `./setup.sh --venv`): executes `pip install -e .` and installs declared dependencies (`numpy`, etc.).
+- **Offline installation** (`./setup.sh --offline` or `./setup.sh --venv --offline`): executes `pip install --no-build-isolation --no-deps -e .`, skipping network resolution and therefore **requiring build/runtime dependencies (`setuptools`, `wheel`, `numpy`) to already be preinstalled** in the target Python environment.
 
 ---
 
@@ -57,15 +64,20 @@ Rather than jumping straight to a finished codebase or discarding flawed drafts,
 
 ## 3. Effort Comparison: With AI Assistance vs. Without AI Assistance
 
-| Activity / Phase | Actual Effort (With AI) | Estimated Effort (Without AI) | Where Human Judgment Was Critical |
-|------------------|-------------------------|-------------------------------|-----------------------------------|
-| **Starter Baseline Audit & Bug Hunting** (Attempt 0–1) | ~20 min | ~2–3 hours | Identifying subtle Python negative-index wrap-around, namespace leakage, and deciding to preserve Attempt 0 unmodified |
-| **Combinatorial 4-Polyplet Math & Multi-Axis Hierarchy** (Attempt 2) | ~25 min | ~4–6 hours | Catching missing `3×4` / `4×3` bounding-box classes, clarifying 7 classic vs. 34 one-sided vs. 110 fixed counts, and defining landing-hole invariants |
-| **FSM Engine, Functional-OO Distributions & Renderers** (Attempt 3) | ~35 min | ~6–8 hours | Enforcing UI decoupling, designing seeded combinator reproducibility tests, and catching IEEE-754 `ceil()` drift |
-| **JSON Schema, Builder, Persistence, Studio Notebook & Tests** (Attempt 4) | ~45 min | ~6–10 hours | Catching `BagDistribution` premature draw during `load_state()`, testing invalid configs, and enforcing no-code notebook parity |
-| **Packaging, Clean-Venv Verification & Documentation** (Attempt 5) | ~40 min | ~4–6 hours | Insisting on isolated venv ZIP verification, verifying every documented CLI/API example, and keeping all historical snapshots intact |
-| **Total** | **~2.75 hours** | **~22–33 hours** | **~8–12× speedup**, primarily in boilerplate, test scaffolding, and documentation formatting, while architecture and bug verification remained human-directed |
+> **Methodological Qualification (Retrospective Estimates vs. Measured Facts):**  
+> The session spanned from `01:55 IST` (`INT-001` workspace setup/baseline) to `12:50 IST` (`INT-027` post-audit fixes) on 26 November 2026 with intermittent user breaks between phases. Neither the active with-AI effort (~2.75 hours across active coding/verification windows) nor the without-AI baseline (**~22–33 hours**, implying roughly an **~8–12× speedup**) comes from a controlled experiment building the codebase twice. Both figures are **retrospective engineering estimates** grounded in transcript timestamps, codebase size, debugging incidents logged in `AI_INTERACTION_LOG.md`, and typical manual implementation effort for software of comparable scope.
+
+### Breakdown & Estimation Basis
+
+| Activity / Phase | Est. Active Effort (With AI) | Est. Manual Effort (Without AI) | Basis for Manual Estimate | Accelerated by AI | Required Independent Research, Debugging & Human Judgment |
+|------------------|------------------------------|---------------------------------|---------------------------|-------------------|-------------------------------------------------------------|
+| **Starter Baseline Audit & Bug Hunting** (Attempts 0–1) | ~20 min | ~2–3 hours | Manual PDF transcription, reproducing UI freezes, and tracing NumPy/Tkinter quirks | Initial boilerplate extraction and AST/import probe scripts | Diagnosing silent negative-index wrap-around in `Board.collision()`, `tk.simpledialog` implicit submodule import behavior, preserving Attempt 0 unmodified, and proving why 71 matrices biased sampling (`INT-001`–`INT-005`) |
+| **Combinatorial 4-Polyplet Math & Multi-Axis Hierarchy** (Attempt 2) | ~25 min | ~4–6 hours | Deriving 8-connectivity invariants, symmetry canonicalization, MRO composition, and unit tests | Enumerating candidate hierarchy classes and rotation-invariant test cases | Verifying the exact `110` fixed / `34` one-sided / `22` free / `7` classic counts, designing cooperative `(Box, Morphology, Cavity)` synthesis over 66 manual classes, catching `Shape.clone()` dropping subclasses on rotation, and fixing the full-row blocker bug in the Attempt 2 game-over test (`INT-007`–`INT-010`) |
+| **FSM Engine, Functional-OO Distributions & Renderers** (Attempt 3) | ~35 min | ~6–8 hours | Implementing decoupled FSM states, wall-kick tables, cross-platform `termios`/`msvcrt` I/O, and 5 composable distributions | Multi-strategy class scaffolding, combinator adapters, and repetitive test setup | Enforcing zero `tkinter` leakage into core engine, designing seeded combinator reproducibility invariants, catching IEEE-754 `math.ceil(450 * 1.1)` float drift (`496` vs `495`), and isolating `termios.setcbreak()` behind `isatty()` (`INT-012`–`INT-015`) |
+| **JSON Schema, Builder, Persistence, Studio Notebook & Tests** (Attempt 4) | ~45 min | ~6–10 hours | Authoring JSON schema rules, Fluent Builder, stateful save/load parity, Jupyter widgets, and 8 test suites | Drafting repetitive validator branches, JSON presets, notebook cell scaffolding, and categorized tests | Catching `_is_strict_int()` boolean trap (`isinstance(True, int)`), diagnosing premature `BagDistribution` draws during `load_engine_state()`, fixing row `10` vs row `8` wall-kick test fixture, and enforcing zero duplicate game rules in `ExTetris_Studio.ipynb` (`INT-017`–`INT-020`) |
+| **Packaging, Clean-Venv Verification, Docs & Final Audit** (Attempt 5) | ~40 min | ~4–6 hours | Setting up `pyproject.toml`, Make/shell automation, Mermaid UML/API/designer manuals, and clean-venv release testing | Structuring Markdown/Mermaid documentation and packaging/CLI boilerplate | Debugging Make backslash `SyntaxError` (extracting `extetris/packaging.py`), enforcing isolated `venv` verification, probing `Tk()` display availability (`INT-027`), fixing `setup.sh --no-deps` dependency omission, adding offline pip skip detection, and preserving authentic verbatim logs (`INT-022`–`INT-027`) |
+| **Retrospective Total** | **~2.75 hours** | **~22–33 hours** | Sum of phase estimates | **~8–12× estimated speedup** on scaffolding, repetitive tests & docs | **All architecture boundaries, correctness audits, bug diagnoses, and assignment alignment depended on human verification** |
 
 ### Candid Assessment of Trade-Offs
-- **Strengths of AI-Assisted Workflow:** Rapid iteration between complete runnable snapshots, fast generation of structured unit tests and Mermaid/Markdown documentation, and immediate cross-checking of combinatorial invariants.
-- **Limitations & Risks Observed:** AI-generated test fixtures initially had subtle logic mistakes (e.g., full-row blocker clearing itself in Attempt 2, wrong obstacle row in Attempt 4 wall-kick test, inline Makefile backslash syntax error in Attempt 5, and `BagDistribution` state advance in `load_engine_state`), proving that **every AI output required hands-on execution, inspection, and targeted debugging**.
+- **What AI Actually Accelerated:** Rapid iteration across six complete runnable snapshots, generating structured multi-axis test matrices, drafting JSON schema presets, and formatting technical/UML/designer documentation.
+- **What Required Human Verification & Debugging:** Every single AI-generated phase required hands-on execution, review, and manual course-correction—AI test fixtures initially contained real logic errors (Attempt 2 full-row blocker self-clearing, Attempt 4 wrong wall-kick obstacle row), `load_engine_state()` silently broke bag parity until initialization order was corrected, inline Make Python raised `SyntaxError`, and `TkinterRenderer.is_available()`/`setup.sh`/`test_submission_package.py` initially hid headless and offline environment assumptions until explicitly audited (`INT-027`).

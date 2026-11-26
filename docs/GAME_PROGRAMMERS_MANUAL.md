@@ -4,9 +4,18 @@ Welcome! This manual is written for **game designers** who want to create, custo
 
 ---
 
-## 1. Quick Start (Ready-Made Presets)
+## 1. Quick Start (Installation & Ready-Made Presets)
 
-After running `./setup.sh` once (or `make setup`), you can launch any included preset immediately:
+- **Normal installation (requires internet/PyPI):** Installs ExTetris and required packages (`numpy`):
+  ```bash
+  ./setup.sh          # or: ./setup.sh --venv   (recommended isolated environment)
+  ```
+- **Offline installation (no internet):** Uses already-installed system/environment packages (`pip install --no-build-isolation --no-deps -e .`). Ensure `setuptools`, `wheel`, and `numpy` are already installed before running:
+  ```bash
+  ./setup.sh --offline
+  ```
+
+After setup, you can launch any included preset immediately:
 
 | Command | Variant | Piece Pool | Board | Strategy |
 |---------|---------|------------|-------|----------|

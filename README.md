@@ -11,20 +11,30 @@ Assignment for **CS F301 Principles of Programming Languages (PoPL), Sem-I, 2026
 
 ## Quick Start
 
-```bash
-# 1. Install package (editable)
-./setup.sh
+### Installation (Normal vs. Offline)
+- **Normal installation (recommended, requires network/PyPI index):** Installs `extetris` in editable mode along with its declared dependencies (such as `numpy`):
+  ```bash
+  ./setup.sh          # or: make setup
+  ./setup.sh --venv   # creates and installs into .venv/
+  ```
+- **Offline installation (uses preinstalled dependencies):** Runs `pip install --no-build-isolation --no-deps -e .` without fetching packages over the network. **Build and runtime dependencies (`setuptools`, `wheel`, `numpy`) must already be installed** in the active Python (or `.venv`) before using `--offline`:
+  ```bash
+  ./setup.sh --offline
+  ```
 
-# 2. Run a preset variant
+### Running, Testing & Packaging
+
+```bash
+# 1. Run a preset variant
 make run-classic      # 7 classic tetrominoes, 7-Bag, CLI
 make run-extended     # 34 one-sided polyplets, Adaptive, CLI
 make run-chaos        # 110 fixed orientations, Markov, CLI
 make run-gui          # Tkinter GUI window (optional)
 
-# 3. Run full test suite (all 9 categories, incl. clean-venv packaging test)
+# 2. Run full test suite (all 9 categories, incl. clean-venv packaging test)
 make test
 
-# 4. Build submission archive (dist/extetris_submission.zip)
+# 3. Build submission archive (dist/extetris_submission.zip)
 make package
 ```
 
@@ -32,6 +42,8 @@ Or open the no-code interactive designer:
 ```bash
 jupyter notebook ExTetris_Studio.ipynb
 ```
+
+> **Note on Preserved History:** The `attempts/` folder (`attempt_0_appendix_baseline/` through `attempt_4_designer_and_tests/`) and `AI_INTERACTION_LOG.md` preserve every historical development snapshot directly inside the distribution ZIP even though `.git/` metadata is excluded from packaged archives (commit hashes and tags referenced in reports come from the local development Git repository, with no remote URL configured).
 
 ## Documentation Suite
 - [Design Document](docs/DESIGN.md) — Architecture, division of labour, and core design decisions
