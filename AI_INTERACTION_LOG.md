@@ -8,7 +8,7 @@
 - **Assistant / Tool Used:** Antigravity (Gemini 4 Hydrogen High)
 - **Project:** Extended Tetris (ExTetris) — CS F301 PoPL
 - **Source Verification:** All 27 entries (`INT-001`–`INT-027`) reproduce exact verbatim prompts and complete, unedited AI responses extracted directly from the session transcript (`transcript_full.jsonl`), separated from implementation artifacts (Section 5) and observed terminal output (Section 6).
-- **Git Provenance Note:** Referenced commit hashes and tags come from the local Git repository used during development (no remote URL is configured). Submission ZIP archives omit `.git/` metadata by design while preserving every runnable attempt snapshot on disk under `attempts/`. *(Verified tag mapping synced in final header note.)*
+- **Git Provenance Note:** Referenced commit hashes and tags come from the local Git repository used during development (no remote URL is configured). Verified release tags: `attempt-0-baseline` (`846e81b`), `attempt-1-naive-oop` (`9e2cfc7`), `attempt-2-shape-hierarchy` (`31ed371`), `attempt-3-engine-and-distributions` (`c091859`), `attempt-4-designer-and-tests` (`c18c89a`), and `attempt-5-final` (`8282631`). *(Earlier intermediate Attempt 5 commits `3d59b1c`, `4e9ee54`, `cfd1a1f`, `fa26c1f`, `fdb216c`, `03a0523` cited inside historical verbatim entries remain valid ancestors on `master`.)* Submission ZIP archives omit `.git/` metadata by design while preserving every runnable attempt snapshot on disk under `attempts/`.
 
 ---
 
