@@ -270,17 +270,17 @@ class ExTetrisEngine(object):
         old_level = self.level
         tiers = self.lines_cleared // 10
         self.level = 1 + tiers
-        self.drop_speed_ms = max(100, int(self.initial_speed_ms * (self.speed_factor ** tiers)))
+        self.drop_speed_ms = max(100, int(round(self.initial_speed_ms * (self.speed_factor ** tiers), 6)))
         if self.level != old_level:
             self._emit("level_up", old_level=old_level, new_level=self.level, drop_speed_ms=self.drop_speed_ms)
             self._emit("speed_changed", drop_speed_ms=self.drop_speed_ms)
 
     def speed_up(self):
-        self.drop_speed_ms = max(100, int(math.floor(self.drop_speed_ms * 0.9)))
+        self.drop_speed_ms = max(100, int(math.floor(round(self.drop_speed_ms * 0.9, 6))))
         self._emit("speed_changed", drop_speed_ms=self.drop_speed_ms)
 
     def slow_down(self):
-        self.drop_speed_ms = int(math.ceil(self.drop_speed_ms * 1.1))
+        self.drop_speed_ms = int(math.ceil(round(self.drop_speed_ms * 1.1, 6)))
         self._emit("speed_changed", drop_speed_ms=self.drop_speed_ms)
 
     def _lock_and_advance(self):
